@@ -1,0 +1,41 @@
+/* --- HIDE STREAMLIT DEFAULTS --- */
+
+/* Hide the "Made with Streamlit" footer */
+footer {
+    visibility: hidden;
+}
+
+/* Hide the Streamlit main menu (hamburger icon) */
+#MainMenu {
+    visibility: hidden;
+}
+
+/* Hide the header bar that appears when scrolling */
+header {
+    visibility: hidden;
+}
+
+/* Hide the default Streamlit sidebar navigation in multipage apps */
+/* This is crucial for our custom top navigation to be the only one */
+ul[data-testid='st-PageLink-list'] {
+    display: none;
+}
+
+
+/* --- CUSTOM STYLING --- */
+
+/* Style the main app container */
+.stApp {
+    /* You can add a background color or image here */
+    background-color: #f0f2f6;
+}
+
+/* Style the title in the Classifier page */
+h1 {
+    color: #31333F;
+}
+
+/* Style the headers */
+h2, h3 {
+    color: #31333F;
+}

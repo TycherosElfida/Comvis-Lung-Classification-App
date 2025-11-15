@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-from utils import ui # We will create this file in Phase 4
+from utils.ui import load_css
 
 # --- 1. PAGE CONFIGURATION ---
 # Set the basic configuration for your app
@@ -10,6 +10,8 @@ st.set_page_config(
     layout="wide",   # Use the full screen width
     initial_sidebar_state="auto" # Keep sidebar, but allow auto-hide
 )
+
+load_css("assets/style.css")
 
 # --- 2. MODERN NAVIGATION BAR ---
 # This replaces the default Streamlit sidebar navigation
