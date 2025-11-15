@@ -29,7 +29,7 @@ def preprocess_image(image_bytes):
         image_bytes (bytes): The raw bytes of the image from st.file_uploader.
     
     Returns:
-        torch.Tensor: The preprocessed image tensor.
+        torch.Tensor or None: The preprocessed image tensor, or None if an error occurs.
     """
     try:
         image = Image.open(io.BytesIO(image_bytes))
@@ -45,8 +45,9 @@ def preprocess_image(image_bytes):
         return image_tensor.unsqueeze(0)
     
     except Exception as e:
-        st.error(f"Error preprocessing image: {e}")
-        return None
+        # Log the error to the console for debugging
+        print(f"Error preprocessing image: {e}")
+        return None # Return None instead of st.error
 
 # --- 2. PREDICTION FUNCTION (Multi-Label) ---
 
@@ -59,7 +60,7 @@ def predict(model, image_tensor):
         image_tensor (torch.Tensor): The preprocessed image tensor.
     
     Returns:
-        dict: A dictionary of {class_name: confidence_score} for all 13 classes.
+        dict or None: A dictionary of {class_name: confidence_score}, or None if an error occurs.
     """
     if model is None or image_tensor is None:
         return None
@@ -68,14 +69,9 @@ def predict(model, image_tensor):
         model.eval()
         
         with torch.no_grad():
-            # Get the model's raw output (logits)
             outputs = model(image_tensor)
+            probabilities = torch.sigmoid(outputs).squeeze()
             
-            # Apply sigmoid to get probabilities for EACH class (0.0 to 1.0)
-            # This is the correct function for multi-label, not softmax.
-            probabilities = torch.sigmoid(outputs).squeeze() # Remove batch dim
-            
-            # Create a dictionary mapping class names to probabilities
             results = {
                 CLASS_NAMES[i]: probabilities[i].item() 
                 for i in range(len(CLASS_NAMES))
@@ -84,5 +80,6 @@ def predict(model, image_tensor):
             return results
     
     except Exception as e:
-        st.error(f"Error during prediction: {e}")
-        return None
+        # Log the error to the console for debugging
+        print(f"Error during prediction: {e}")
+        return None # Return None instead of st.error

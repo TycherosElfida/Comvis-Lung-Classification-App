@@ -1,3 +1,10 @@
-# Virtual Environment
+# Python
 venv/
+__pycache__/
+*.pyc
+
+# Model Files
 *.pth
+
+# OS
+.DS_Store
