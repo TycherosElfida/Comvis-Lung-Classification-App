@@ -31,7 +31,7 @@ def display_results(results, image):
         col1, col2 = st.columns([1, 1.5])
         
         with col1:
-            st.image(image, caption="Uploaded Scan", use_container_width=True)
+            st.image(image, caption="Uploaded Scan", width='stretch')
         
         with col2:
             tab1, tab2 = st.tabs(["📊 Summary", "📈 All Scores"])

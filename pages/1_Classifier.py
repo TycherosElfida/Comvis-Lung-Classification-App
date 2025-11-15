@@ -27,7 +27,7 @@ with col1:
     if uploaded_file:
         # If a file is uploaded, display the image
         image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded X-Ray", use_column_width=True)
+        st.image(image, caption="Uploaded X-Ray", width='stretch')
         
         # Store the image bytes in session state for prediction
         st.session_state['image_bytes'] = uploaded_file.getvalue()
