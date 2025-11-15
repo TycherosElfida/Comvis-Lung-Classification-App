@@ -1,41 +1,139 @@
+/* --- ROOT COLOR & FONT DEFINITIONS --- */
+:root {
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-color: #EAECEF; /* Main text color */
+    --font-color-muted: #A0AEC0; /* Lighter text for subtitles */
+    
+    --bg-color-main: #0B0F19;     /* Main app background - very dark blue */
+    --bg-color-card: #121826;     /* Card background - slightly lighter */
+    --border-color-card: #2A364R; /* A subtle border for cards */
+
+    --accent-color: #00A3FF;       /* A bright, "tech" blue for accents */
+    --accent-color-hover: #007BFF; /* Accent for hover states */
+    
+    --success-color: #05C180;     /* Green for success messages */
+    --warning-color: #FFC107;     /* Yellow for warnings */
+    --danger-color: #E53E3E;      /* Red for errors */
+}
+
 /* --- HIDE STREAMLIT DEFAULTS --- */
-
-/* Hide the "Made with Streamlit" footer */
-footer {
+footer, #MainMenu, header {
     visibility: hidden;
 }
-
-/* Hide the Streamlit main menu (hamburger icon) */
-#MainMenu {
-    visibility: hidden;
-}
-
-/* Hide the header bar that appears when scrolling */
-header {
-    visibility: hidden;
-}
-
-/* Hide the default Streamlit sidebar navigation in multipage apps */
-/* This is crucial for our custom top navigation to be the only one */
 ul[data-testid='st-PageLink-list'] {
     display: none;
 }
 
+/* --- MAIN APP & TYPOGRAPHY --- */
+body {
+    font-family: var(--font-family);
+    color: var(--font-color);
+}
 
-/* --- CUSTOM STYLING --- */
-
-/* Style the main app container */
 .stApp {
-    /* You can add a background color or image here */
-    background-color: #f0f2f6;
+    background-color: var(--bg-color-main);
+    color: var(--font-color);
 }
 
-/* Style the title in the Classifier page */
-h1 {
-    color: #31333F;
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-family);
+    color: var(--font-color);
+    font-weight: 600; /* Bolder headings */
 }
 
-/* Style the headers */
-h2, h3 {
-    color: #31333F;
+p, .stMarkdown {
+    color: var(--font-color-muted);
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+/* --- CUSTOM "FLOATING CARD" CONTAINERS --- */
+/* This targets all containers created with st.container(border=True) */
+div[data-testid="stVerticalBlock"] > div[data-testid="stContainer"] {
+    background-color: var(--bg-color-card);
+    border-radius: 12px;
+    padding: 2.5em;
+    border: 1px solid var(--border-color-card);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease-in-out;
+}
+div[data-testid="stVerticalBlock"] > div[data-testid="stContainer"]:hover {
+    box-shadow: 0 10px 30px -10px rgba(0, 163, 255, 0.1); /* Subtle blue glow on hover */
+    border: 1px solid var(--accent-color);
+}
+
+/* Add spacing between the cards */
+div[data-testid="stVerticalBlock"] > div[data-testid="stContainer"]:not(:last-child) {
+    margin-bottom: 24px;
+}
+
+/* --- WIDGET STYLING --- */
+
+/* File Uploader */
+div[data-testid="stFileUploader"] {
+    border: 2px dashed var(--font-color-muted);
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.02);
+    padding: 1.5em;
+}
+div[data-testid="stFileUploader"] label {
+    color: var(--font-color);
+    font-size: 1.2em;
+    font-weight: 500;
+}
+div[data-testid="stFileUploader"] small {
+    color: var(--font-color-muted);
+}
+
+/* Tabs */
+button[data-baseweb="tab"] {
+    font-family: var(--font-family);
+    font-size: 1.1em !important;
+    font-weight: 500;
+    color: var(--font-color-muted) !important;
+    background-color: transparent !important;
+    border-bottom: 2px solid transparent;
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+    transition: all 0.2s;
+}
+button[data-baseweb="tab"]:hover {
+    color: var(--font-color) !important;
+    background-color: rgba(255, 255, 255, 0.03) !important;
+}
+button[data-baseweb="tab"][aria-selected="true"] {
+    color: var(--accent-color) !important;
+    border-bottom: 2px solid var(--accent-color);
+}
+
+/* Alerts (Success, Warning) */
+div[data-testid="stAlert"] {
+    border-radius: 8px;
+    border: none;
+    font-size: 1.05em;
+    padding: 1.2em;
+}
+div[data-testid="stAlert"][data-alert-type="success"] {
+    background-color: rgba(5, 193, 128, 0.1);
+    color: var(--success-color);
+}
+div[data-testid="stAlert"][data-alert-type="warning"] {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: var(--warning-color);
+}
+div[data-testid="stAlert"][data-alert-type="error"] {
+    background-color: rgba(229, 62, 62, 0.1);
+    color: var(--danger-color);
+}
+
+/* Spinner */
+div[data-testid="stSpinner"] > div {
+    border-top-color: var(--accent-color) !important;
+}
+
+/* Bar Chart */
+div[data-testid="stBarChart"] {
+    background-color: rgba(255, 255, 255, 0.02);
+    padding: 1em;
+    border-radius: 8px;
 }
