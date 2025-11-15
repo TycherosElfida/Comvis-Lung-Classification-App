@@ -1,74 +1,62 @@
 import streamlit as st
 import torch
 import torch.nn as nn
-from torchvision import models
+import timm
 import os
 
-# --- 1. USER CONFIGURATION ---
-# IMPORTANT: You must update these two variables.
-# 
-# 1. Update this list with the names of your lung disease classes,
-#    in the exact order your model was trained on.
 CLASS_NAMES = [
-    "Class 1", 
-    "Class 2", 
-    "Class 3", 
-    "Class 4"
+    'Atelectasis', 'Cardiomegaly', 'Consolidation', 'Edema', 'Effusion',
+    'Emphysema', 'Fibrosis', 'Infiltration', 'Mass', 'Nodule',
+    'Pleural_Thickening', 'Pneumonia', 'Pneumothorax'
 ]
 NUM_CLASSES = len(CLASS_NAMES)
-# -----------------------------
 
 @st.cache_resource
 def load_model(model_path):
     """
-    Loads and caches the DenseNet-121 model from a .pth state_dict file.
+    Loads and caches the DenseNet-121 model from a .pth state_dict file
+    using the timm library, matching the training script.
     
     Args:
-        model_path (str): The path to the model file.
+        model_path (str): The path to the model file (e.g., "models/best_model.pth").
     
     Returns:
         torch.nn.Module: The loaded PyTorch model.
     """
     try:
-        # Check if the model file exists
         if not os.path.exists(model_path):
             st.error(f"Model file not found at: {model_path}")
             return None
 
-        # 1. Initialize the DenseNet-121 model architecture
-        # We use 'weights=None' because we are loading our own custom weights
-        model = models.densenet121(weights=None)
+        # 1. Initialize the densenet121 model using timm
+        # We use pretrained=False because we are about to load our own weights.
+        model = timm.create_model(
+            'densenet121', 
+            pretrained=False, 
+            in_chans=3
+        )
 
-        # 2. Modify the final classifier layer
-        # The 'state_dict' keys show you saved the *entire* model,
-        # including the final layer. We must replace the default 
-        # classifier with one that matches your number of classes.
-        
-        # Get the number of input features for the default classifier
-        num_ftrs = model.classifier.in_features
-        
-        # Create a new, untrained classifier layer
-        model.classifier = nn.Linear(num_ftrs, NUM_CLASSES)
-        
+        # 2. Replace the classifier head to match your 13 classes
+        # This must be done *before* loading the state_dict.
+        n_features = model.classifier.in_features
+        model.classifier = nn.Linear(n_features, NUM_CLASSES)
+
         # 3. Load the saved weights (state_dict)
-        # Load the dictionary of weights
         state_dict = torch.load(model_path, map_location=torch.device('cpu'))
         
-        # Load the weights into our new model structure
+        # 4. Load the weights into the model structure
         model.load_state_dict(state_dict)
         
-        # 4. Set the model to evaluation mode
-        # This is essential for consistent predictions
+        # 5. Set the model to evaluation mode
         model.eval()
         
-        print("Model loaded successfully.") # For debugging
+        print("Model loaded successfully using timm.") # For debugging
         return model
 
     except Exception as e:
         st.error(f"Error loading model: {e}")
         st.error(
-            "This often happens if 'NUM_CLASSES' is not set correctly, "
-            "or if the model architecture is not a DenseNet-121. "
-            "Please check your 'CLASS_NAMES' list in 'utils/model_loader.py'."
+            "This likely means your 'best_model.pth' file does not match the 'densenet121' "
+            "architecture from 'timm'. Please double-check the notebook."
         )
         return None
