@@ -2,7 +2,8 @@ streamlit
 torch
 torchvision
 pillow
-streamlit-option-menu
 timm
 pandas
 supabase
+grad-cam
+opencv-python-headless
