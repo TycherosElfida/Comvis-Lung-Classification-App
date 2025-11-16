@@ -30,7 +30,7 @@ def display_results(results, image): # image is now the PIL Image object
         col1, col2 = st.columns([1, 1.5])
         
         with col1:
-            st.image(image, caption="Uploaded Scan", use_column_width=True)
+            st.image(image, caption="Uploaded Scan", width='stretch')
         
         with col2:
             # Add the new "Explainability" tab
@@ -70,7 +70,7 @@ def display_results(results, image): # image is now the PIL Image object
                 # Slider for heatmap opacity
                 opacity = st.slider("Heatmap Opacity", 0.2, 1.0, 0.7)
                 
-                if st.button(f"Generate Heatmap for {selected_class}", use_container_width=True):
+                if st.button(f"Generate Heatmap for {selected_class}", width='stretch'):
                     with st.spinner(f"Generating Grad-CAM for {selected_class}..."):
                         
                         # We need the preprocessed tensor
