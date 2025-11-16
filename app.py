@@ -90,7 +90,7 @@ def display_results(results, image): # image is now the PIL Image object
                         st.image(
                             heatmap_image, 
                             caption=f"Grad-CAM for {selected_class}", 
-                            use_column_width=True
+                            width='stretch'
                         )
 
 # --- 5. MAIN PAGE UI ---
@@ -114,6 +114,7 @@ with st.container(border=True): # Styled by your CSS
         if results:
             st.session_state['results'] = results
             st.session_state['uploaded_image'] = image
+            st.session_state['image_bytes'] = image_bytes
             
             # --- LOGGING STEP ---
             log_prediction(image_bytes, MODEL_ID, results)

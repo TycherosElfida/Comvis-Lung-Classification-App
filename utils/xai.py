@@ -33,8 +33,7 @@ def generate_grad_cam(model, image_tensor, image_pil, target_class_index):
 
     # 4. Initialize Grad-CAM
     # We use .cuda() if available, else it defaults to CPU
-    use_cuda = torch.cuda.is_available()
-    cam = GradCAM(model=model, target_layers=target_layer, use_cuda=use_cuda)
+    cam = GradCAM(model=model, target_layers=target_layer)
     
     # 5. Generate the heatmap
     grayscale_cam = cam(input_tensor=image_tensor, targets=targets)
