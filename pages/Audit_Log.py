@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from utils.supabase_client import get_supabase_client
 from utils.ui import load_css
+import json
 
 st.set_page_config(
     page_title="Audit Log",
@@ -15,24 +16,16 @@ def check_password():
     """Returns True if the password is correct."""
     try:
         admin_password = st.secrets["admin"]["password"]
-    except:
+    except KeyError:
         st.error("Admin password not set in st.secrets.toml. Please contact the administrator.")
         return False
 
     if "password_correct" not in st.session_state:
-        # First run, show password input
-        password = st.text_input("Enter Admin Password:", type="password")
-        if st.button("Submit"):
-            if password == admin_password:
-                st.session_state["password_correct"] = True
-                st.rerun()
-            else:
-                st.error("The password you entered is incorrect.")
-        return False
-    elif not st.session_state["password_correct"]:
-        # Subsequent runs, if password was wrong
-        password = st.text_input("Enter Admin Password:", type="password")
-        if st.button("Submit"):
+        st.session_state["password_correct"] = False
+
+    if not st.session_state["password_correct"]:
+        password = st.text_input("Enter Admin Password:", type="password", key="admin_pass_input")
+        if st.button("Submit", key="admin_pass_button"):
             if password == admin_password:
                 st.session_state["password_correct"] = True
                 st.rerun()
@@ -40,7 +33,6 @@ def check_password():
                 st.error("The password you entered is incorrect.")
         return False
     else:
-        # Password is correct
         return True
 
 @st.cache_data(ttl=300) # Cache data for 5 minutes
@@ -51,25 +43,23 @@ def fetch_audit_log():
         return pd.DataFrame() # Return empty dataframe on error
         
     try:
-        # This SQL query joins the predictions table with the models table
-        # to get the human-readable model version_name.
-        query = """
-            SELECT 
-                p.created_at, 
-                p.image_url, 
-                p.results_json, 
-                m.version_name 
-            FROM 
-                predictions p
-            JOIN 
-                models m ON p.model_id = m.id
-            ORDER BY
-                p.created_at DESC
-        """
-        response = client.rpc('execute_sql', {'sql_query': query}).execute()
+        # --- THIS IS THE CORRECTED QUERY ---
+        # This is the standard PostgREST way to do a JOIN.
+        # It selects columns from 'predictions' and specifies the
+        # foreign key 'models' and which columns to bring from it.
+        response = client.table('predictions').select(
+            'created_at, image_url, results_json, models(version_name)'
+        ).order('created_at', desc=True).execute()
+        # ------------------------------------
         
         if response.data:
             df = pd.DataFrame(response.data)
+            
+            # The JOIN creates a nested dictionary, e.g., {'models': {'version_name': 'v1'}}
+            # We must "flatten" this for the dataframe.
+            df['version_name'] = df['models'].apply(lambda x: x['version_name'] if isinstance(x, dict) else 'N/A')
+            df.drop(columns=['models'], inplace=True) # Drop the nested dict column
+            
             return df
         else:
             return pd.DataFrame()
@@ -91,7 +81,6 @@ if check_password():
             st.write(f"Displaying **{len(df)}** most recent predictions.")
             
             # --- Display the Log ---
-            # We use st.data_editor to get a modern, interactive table
             st.data_editor(
                 df,
                 column_config={
