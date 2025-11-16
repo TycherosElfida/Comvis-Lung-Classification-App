@@ -5,3 +5,4 @@ pillow
 streamlit-option-menu
 timm
 pandas
+supabase
