@@ -1,9 +1,0 @@
-streamlit
-torch
-torchvision
-pillow
-timm
-pandas
-supabase
-grad-cam
-opencv-python-headless
