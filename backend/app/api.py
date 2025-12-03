@@ -1,39 +1,191 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from typing import List
-import os
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-from .model_service import ModelService
+"""
+FastAPI Endpoints for Krida LungVision AI Service
+"""
+from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi.responses import JSONResponse
+from typing import List, Dict
+from .model_service import get_model_service
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
-# Initialize model service
-MODEL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../models/best_model_finetuned.pth"))
-print(f"Initializing ModelService with path: {MODEL_PATH}")
-model_service = ModelService(MODEL_PATH)
+# Allowed image MIME types
+ALLOWED_TYPES = {"image/jpeg", "image/jpg", "image/png"}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
-# Create a thread pool executor
-executor = ThreadPoolExecutor(max_workers=1)
-
-@router.post("/predict")
-async def predict(file: UploadFile = File(...)):
-    print(f"Received prediction request for file: {file.filename}")
-    if not model_service.model:
-        print("Error: Model not loaded")
-        raise HTTPException(status_code=503, detail="Model not loaded")
-
+@router.post("/predict", response_model=Dict)
+async def predict_xray(
+    file: UploadFile = File(...),
+    threshold: float = 0.3  # Lower threshold to show more predictions
+):
+    """
+    Chest X-Ray Pathology Classification Endpoint
+    
+    Args:
+        file: Uploaded image file (JPG/PNG)
+        threshold: Minimum confidence score (default: 0.3)
+        
+    Returns:
+        JSON response with predictions array containing:
+        - label: Pathology name
+        - score: Confidence score (0-1)
+        - confidence_pct: Percentage (0-100)
+        - severity: Classification (high/medium/low)
+    """
+    # Validate file type
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type. Allowed: {', '.join(ALLOWED_TYPES)}"
+        )
+    
+    # Read file bytes
     try:
         image_bytes = await file.read()
-        print(f"Read {len(image_bytes)} bytes from file")
         
-        # Run prediction in a separate thread to avoid blocking the event loop
-        loop = asyncio.get_event_loop()
-        predictions = await loop.run_in_executor(executor, model_service.predict, image_bytes)
+        # Validate file size
+        if len(image_bytes) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Maximum size: {MAX_FILE_SIZE / (1024*1024)}MB"
+            )
         
-        print("Prediction successful")
-        return {"predictions": predictions}
+        # Get model service and run inference
+        model_service = get_model_service()
+        
+        # Measure inference time
+        import time
+        start_time = time.time()
+        predictions = model_service.predict(image_bytes, threshold=threshold)
+        inference_time_ms = (time.time() - start_time) * 1000
+        
+        # Build response
+        return {
+            "success": True,
+            "predictions": predictions,
+            "inference_time_ms": round(inference_time_ms, 2),
+            "model_info": {
+                "name": "DenseNet121",
+                "num_classes": 13,
+                "threshold": threshold
+            }
+        }
+        
     except Exception as e:
-        print(f"Error processing request: {e}")
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Prediction error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Inference failed: {str(e)}"
+        )
+
+
+@router.post("/predict-with-gradcam", response_model=Dict)
+async def predict_with_gradcam(
+    file: UploadFile = File(...),
+    threshold: float = 0.3,
+    target_class: str = None
+):
+    """
+    Chest X-Ray Classification with Grad-CAM Heatmap
+    
+    Args:
+        file: Uploaded image file (JPG/PNG)
+        threshold: Minimum confidence score (default: 0.3)
+        target_class: Optional specific class for Grad-CAM (default: highest confidence)
+        
+    Returns:
+        JSON with predictions + Grad-CAM heatmap visualization
+    """
+    from .gradcam_service import get_gradcam_service
+    
+    # Validate file type
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type. Allowed: {', '.join(ALLOWED_TYPES)}"
+        )
+    
+    try:
+        image_bytes = await file.read()
+        
+        # Validate file size
+        if len(image_bytes) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Maximum size: {MAX_FILE_SIZE / (1024*1024)}MB"
+            )
+        
+        # Get predictions from ONNX model (fast)
+        import time
+        start_time = time.time()
+        
+        model_service = get_model_service()
+        predictions = model_service.predict(image_bytes, threshold=threshold)
+        
+        # Generate Grad-CAM heatmap (slower but informative)
+        gradcam_service = get_gradcam_service()
+        gradcam_result = gradcam_service.generate_gradcam(
+            image_bytes,
+            target_class_name=target_class
+        )
+        
+        inference_time_ms = (time.time() - start_time) * 1000
+        
+        return {
+            "success": True,
+            "predictions": predictions,
+            "inference_time_ms": round(inference_time_ms, 2),
+            "gradcam": gradcam_result,
+            "model_info": {
+                "name": "DenseNet121",
+                "num_classes": 13,
+                "threshold": threshold
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Grad-CAM prediction error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Grad-CAM inference failed: {str(e)}"
+        )
+
+
+@router.get("/health")
+async def health_check():
+    """
+    Health check endpoint for Docker health monitoring
+    """
+    try:
+        model_service = get_model_service()
+        model_info = model_service.get_model_info()
+        
+        return {
+            "status": "healthy",
+            "service": "Krida LungVision AI Backend",
+            "model": model_info
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unhealthy",
+                "error": str(e)
+            }
+        )
+
+
+@router.get("/model/info")
+async def get_model_info():
+    """
+    Get detailed model metadata
+    """
+    try:
+        model_service = get_model_service()
+        return model_service.get_model_info()
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get model info: {str(e)}"
+        )

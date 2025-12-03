@@ -1,100 +1,177 @@
-import torch
-import torch.nn as nn
-import timm
-import io
+"""
+Model Service - ONNX Runtime Inference with Exact Preprocessing
+Replicates Training3.ipynb preprocessing pipeline for production inference
+"""
+import numpy as np
 from PIL import Image
-import torchvision.transforms as transforms
-import os
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
+import onnxruntime as ort
+from pathlib import Path
+from typing import List, Dict, Tuple
+import io
+
+# Exact labels from Training3.ipynb (13 classes)
+LABELS = [
+    'Atelectasis', 'Cardiomegaly', 'Consolidation', 'Edema', 'Effusion', 
+    'Emphysema', 'Fibrosis', 'Infiltration', 'Mass', 
+    'Nodule', 'Pleural_Thickening', 'Pneumonia', 'Pneumothorax'
+]
+
+# ImageNet normalization stats (from Training3.ipynb)
+IMAGENET_MEAN = [0.485, 0.456, 0.406]
+IMAGENET_STD = [0.229, 0.224, 0.225]
 
 class ModelService:
-    def __init__(self, model_path: str):
-        self.model_path = model_path
-        self.model = None
-        self.class_names = [
-            "Atelectasis",
-            "Cardiomegaly",
-            "Consolidation",
-            "Edema",
-            "Effusion",
-            "Emphysema",
-            "Fibrosis",
-            "Infiltration",
-            "Mass",
-            "Nodule",
-            "Pleural_Thickening",
-            "Pneumonia",
-            "Pneumothorax"
-        ]
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self._load_model()
-
-    def _load_model(self):
-        if not os.path.exists(self.model_path):
-            print(f"Error: Model file not found at {self.model_path}")
-            return
-
-        try:
-            print(f"Loading model from {self.model_path}...")
-            # Initialize DenseNet121
-            self.model = timm.create_model(
-                'densenet121',
-                pretrained=False,
-                in_chans=3
-            )
-            
-            # Replace classifier head
-            n_features = self.model.classifier.in_features
-            self.model.classifier = nn.Linear(n_features, len(self.class_names))
-            
-            # Load weights
-            state_dict = torch.load(self.model_path, map_location=self.device)
-            self.model.load_state_dict(state_dict)
-            self.model.to(self.device)
-            self.model.eval()
-            print("Model loaded successfully.")
-            
-        except Exception as e:
-            print(f"Error loading model: {e}")
-            self.model = None
-
-    def _get_transforms(self):
-        mean = [0.485, 0.456, 0.406]
-        std = [0.229, 0.224, 0.225]
-        return transforms.Compose([
-            transforms.Resize((256, 256)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=mean, std=std)
+    def __init__(self, model_path: str = "models/best_model.onnx"):
+        """
+        Initialize ONNX Runtime session with the converted model
+        
+        Args:
+            model_path: Path to ONNX model file
+        """
+        self.model_path = Path(model_path)
+        if not self.model_path.exists():
+            raise FileNotFoundError(f"Model not found: {model_path}")
+        
+        print(f"[ModelService] Loading ONNX model from {model_path}")
+        
+        # Create ONNX Runtime session (CPU/GPU agnostic)
+        self.session = ort.InferenceSession(
+            str(self.model_path),
+            providers=['CPUExecutionProvider']  # Add 'CUDAExecutionProvider' for GPU
+        )
+        
+        # Get model input/output names
+        self.input_name = self.session.get_inputs()[0].name
+        self.output_name = self.session.get_outputs()[0].name
+        
+        # Create preprocessing transform (EXACT replica of Training3.ipynb validation transform)
+        self.transform = A.Compose([
+            A.Resize(224, 224),  # DenseNet121 input size
+            A.Normalize(
+                mean=IMAGENET_MEAN,
+                std=IMAGENET_STD
+            ),
+            ToTensorV2()
         ])
+        
+        print(f"[ModelService] Model loaded successfully")
+        print(f"[ModelService] Input: {self.input_name} | Output: {self.output_name}")
+        print(f"[ModelService] Ready for inference on {len(LABELS)} classes")
+    
+    def preprocess_image(self, image_bytes: bytes) -> np.ndarray:
+        """
+        Preprocess image bytes using exact Training3.ipynb pipeline
+        
+        Args:
+            image_bytes: Raw image bytes (PNG/JPG)
+            
+        Returns:
+            Preprocessed numpy array (1, 3, 224, 224)
+        """
+        # Load image
+        image = Image.open(io.BytesIO(image_bytes))
+        
+        # Convert to RGB (handle grayscale X-rays)
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        
+        # Convert to numpy array
+        image_np = np.array(image)
+        
+        # Apply albumentations transforms (Resize + Normalize)
+        transformed = self.transform(image=image_np)
+        image_tensor = transformed['image']
+        
+        # Convert PyTorch tensor to numpy and add batch dimension
+        # Shape: (3, 224, 224) → (1, 3, 224, 224)
+        image_np_batch = np.expand_dims(image_tensor.numpy(), axis=0)
+        
+        return image_np_batch.astype(np.float32)
+    
+    def predict(self, image_bytes: bytes, threshold: float = 0.5) -> List[Dict[str, any]]:
+        """
+        Run ONNX inference and return predictions with severity classification
+        
+        Args:
+            image_bytes: Raw image bytes
+            threshold: Minimum confidence score to include in results
+            
+        Returns:
+            List of predictions with label, score, and severity
+        """
+        # Preprocess image
+        input_array = self.preprocess_image(image_bytes)
+        
+        # Run ONNX inference
+        outputs = self.session.run(
+            [self.output_name],
+            {self.input_name: input_array}
+        )
+        
+        # Get raw logits and apply sigmoid for multi-label classification
+        logits = outputs[0][0]  # Shape: (13,)
+        probabilities = self._sigmoid(logits)
+        
+        # Build predictions
+        predictions = []
+        for idx, (label, score) in enumerate(zip(LABELS, probabilities)):
+            if score >= threshold:
+                severity = self._classify_severity(score)
+                predictions.append({
+                    "label": label,
+                    "score": float(score),
+                    "severity": severity,
+                    "confidence_pct": float(round(score * 100, 2))
+                })
+        
+        # Sort by score (descending)
+        predictions.sort(key=lambda x: x['score'], reverse=True)
+        
+        return predictions
+    
+    @staticmethod
+    def _sigmoid(x: np.ndarray) -> np.ndarray:
+        """Apply sigmoid activation to logits"""
+        return 1 / (1 + np.exp(-x))
+    
+    @staticmethod
+    def _classify_severity(score: float) -> str:
+        """
+        Classify severity based on confidence score
+        
+        Returns:
+            'high' | 'medium' | 'low'
+        """
+        if score >= 0.75:
+            return 'high'
+        elif score >= 0.50:
+            return 'medium'
+        else:
+            return 'low'
+    
+    def get_model_info(self) -> Dict[str, any]:
+        """Return model metadata"""
+        return {
+            "model_type": "DenseNet121",
+            "num_classes": len(LABELS),
+            "labels": LABELS,
+            "input_shape": "(1, 3, 224, 224)",
+            "framework": "ONNX Runtime",
+            "preprocessing": {
+                "resize": "224x224",
+                "normalization": "ImageNet (mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])"
+            }
+        }
 
-    def predict(self, image_bytes: bytes):
-        if self.model is None:
-            raise Exception("Model not loaded")
 
-        try:
-            image = Image.open(io.BytesIO(image_bytes))
-            if image.mode != "RGB":
-                image = image.convert("RGB")
+# Singleton instance
+_model_service = None
 
-            transform = self._get_transforms()
-            image_tensor = transform(image).unsqueeze(0).to(self.device)
-
-            with torch.no_grad():
-                outputs = self.model(image_tensor)
-                probabilities = torch.sigmoid(outputs).squeeze()
-                
-                results = []
-                for i, prob in enumerate(probabilities):
-                    results.append({
-                        "label": self.class_names[i],
-                        "score": round(prob.item(), 4),
-                        # Mock bounding box for now as the model is classification only
-                        "box": [0.1, 0.1, 0.2, 0.2] if prob.item() > 0.5 else None 
-                    })
-                
-                # Filter out None boxes if needed, or handle in frontend
-                # For this specific frontend requirement, we might need to adjust structure
-                return results
-
-        except Exception as e:
-            print(f"Error during prediction: {e}")
-            raise e
+def get_model_service() -> ModelService:
+    """Get or create ModelService singleton"""
+    global _model_service
+    if _model_service is None:
+        _model_service = ModelService()
+    return _model_service
