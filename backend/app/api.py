@@ -32,6 +32,7 @@ async def predict_xray(
         - score: Confidence score (0-1)
         - confidence_pct: Percentage (0-100)
         - severity: Classification (high/medium/low)
+        - urgency_tier: Clinical urgency (critical/moderate/routine)
     """
     # Validate file type
     if file.content_type not in ALLOWED_TYPES:
@@ -57,13 +58,14 @@ async def predict_xray(
         # Measure inference time
         import time
         start_time = time.time()
-        predictions = model_service.predict(image_bytes, threshold=threshold)
+        predictions, overall_urgency = model_service.predict(image_bytes, threshold=threshold)
         inference_time_ms = (time.time() - start_time) * 1000
         
-        # Build response
+        # Build response with clinical urgency
         return {
             "success": True,
             "predictions": predictions,
+            "urgency_tier": overall_urgency,  # Case-level urgency for triage
             "inference_time_ms": round(inference_time_ms, 2),
             "model_info": {
                 "name": "DenseNet121",
@@ -87,7 +89,7 @@ async def predict_with_gradcam(
     target_class: str = None
 ):
     """
-    Chest X-Ray Classification with Grad-CAM Heatmap
+    Chest X-Ray Classification with Grad-CAM Heatmap (Combined endpoint)
     
     Args:
         file: Uploaded image file (JPG/PNG)
@@ -121,7 +123,7 @@ async def predict_with_gradcam(
         start_time = time.time()
         
         model_service = get_model_service()
-        predictions = model_service.predict(image_bytes, threshold=threshold)
+        predictions, overall_urgency = model_service.predict(image_bytes, threshold=threshold)
         
         # Generate Grad-CAM heatmap (slower but informative)
         gradcam_service = get_gradcam_service()
@@ -135,6 +137,7 @@ async def predict_with_gradcam(
         return {
             "success": True,
             "predictions": predictions,
+            "urgency_tier": overall_urgency,
             "inference_time_ms": round(inference_time_ms, 2),
             "gradcam": gradcam_result,
             "model_info": {
@@ -149,6 +152,69 @@ async def predict_with_gradcam(
         raise HTTPException(
             status_code=500,
             detail=f"Grad-CAM inference failed: {str(e)}"
+        )
+
+
+@router.post("/gradcam", response_model=Dict)
+async def generate_gradcam_only(
+    file: UploadFile = File(...),
+    target_class: str = None
+):
+    """
+    On-Demand Grad-CAM Heatmap Generation
+    
+    This endpoint generates ONLY the Grad-CAM heatmap without running full inference.
+    Use this when you already have predictions and want to visualize a specific finding.
+    
+    Args:
+        file: Uploaded image file (JPG/PNG)
+        target_class: Specific pathology to visualize (e.g., "Pneumonia")
+        
+    Returns:
+        JSON with Grad-CAM heatmap only
+    """
+    from .gradcam_service import get_gradcam_service
+    
+    # Validate file type
+    if file.content_type not in ALLOWED_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type. Allowed: {', '.join(ALLOWED_TYPES)}"
+        )
+    
+    try:
+        image_bytes = await file.read()
+        
+        # Validate file size
+        if len(image_bytes) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large. Maximum size: {MAX_FILE_SIZE / (1024*1024)}MB"
+            )
+        
+        import time
+        start_time = time.time()
+        
+        # Generate Grad-CAM heatmap only
+        gradcam_service = get_gradcam_service()
+        gradcam_result = gradcam_service.generate_gradcam(
+            image_bytes,
+            target_class_name=target_class
+        )
+        
+        generation_time_ms = (time.time() - start_time) * 1000
+        
+        return {
+            "success": True,
+            "gradcam": gradcam_result,
+            "generation_time_ms": round(generation_time_ms, 2)
+        }
+        
+    except Exception as e:
+        logger.error(f"Grad-CAM generation error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Grad-CAM generation failed: {str(e)}"
         )
 
 

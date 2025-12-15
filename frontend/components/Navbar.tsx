@@ -35,10 +35,10 @@ export function Navbar() {
               Home
             </Link>
             <Link 
-              href="/demo" 
+              href="/dashboard" 
               className="text-gray-300 hover:text-white transition-colors font-medium"
             >
-              Live Demo
+              Dashboard
             </Link>
             <Link 
               href="/about" 
@@ -49,11 +49,11 @@ export function Navbar() {
           </div>
 
           {/* CTA Button */}
-          <Link href="/demo">
+          <Link href="/dashboard">
             <Button 
               className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 shadow-lg hover:shadow-blue-500/50 transition-all"
             >
-              Try Now
+              Dashboard
             </Button>
           </Link>
         </div>

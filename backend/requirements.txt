@@ -3,9 +3,8 @@ uvicorn
 python-multipart
 pydantic
 numpy
-Pillow
-torch
-torchvision
+torch --index-url https://download.pytorch.org/whl/cu126
+torchvision --index-url https://download.pytorch.org/whl/cu126
 timm
 onnx>=1.14.0
 onnxruntime>=1.16.0
@@ -15,8 +14,5 @@ opencv-python-headless
 requests
 
 # Grad-CAM XAI dependencies
-torch>=2.0.0
-torchvision>=0.15.0
 grad-cam>=1.5.0
 matplotlib>=3.7.0
-Pillow>=10.0.0

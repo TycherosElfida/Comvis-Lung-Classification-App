@@ -49,39 +49,41 @@ export function Hero() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/demo">
+              <Link href="/dashboard">
                 <Button 
                   size="lg"
                   className="group relative px-8 py-6 bg-blue-600 hover:bg-blue-700 rounded-full text-white font-semibold shadow-[0_0_40px_rgba(37,99,235,0.3)] hover:shadow-[0_0_60px_rgba(37,99,235,0.5)] transition-all overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                   <span className="flex items-center gap-2">
-                    Try Demo Now <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    Launch Dashboard <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </span>
                 </Button>
               </Link>
               
-              <Button 
-                variant="outline"
-                size="lg"
-                className="px-8 py-6 rounded-full border-white/10 hover:bg-white/5 transition-colors text-gray-300 font-medium"
-              >
-                View Research
-              </Button>
+              <Link href="/research">
+                <Button 
+                  variant="outline"
+                  size="lg"
+                  className="px-8 py-6 rounded-full border-white/10 hover:bg-white/5 transition-colors text-gray-300 font-medium"
+                >
+                  View Research
+                </Button>
+              </Link>
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-6 pt-8 border-t border-white/5">
               <div>
-                <h3 className="text-2xl font-bold text-white">99.8%</h3>
-                <p className="text-sm text-gray-500">Accuracy Rate</p>
+                <h3 className="text-2xl font-bold text-white">0.6794</h3>
+                <p className="text-sm text-gray-500">AUC Score</p>
               </div>
               <div>
                <h3 className="text-2xl font-bold text-white">&lt;50ms</h3>
                 <p className="text-sm text-gray-500">Inference Time</p>
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-white">13+</h3>
+                <h3 className="text-2xl font-bold text-white">13</h3>
                 <p className="text-sm text-gray-500">Pathologies</p>
               </div>
             </div>

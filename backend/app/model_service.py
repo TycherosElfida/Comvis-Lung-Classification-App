@@ -22,6 +22,36 @@ LABELS = [
 IMAGENET_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_STD = [0.229, 0.224, 0.225]
 
+# Clinical Urgency Tiers - Based on medical severity, not just AI confidence
+# This mapping reflects conditions requiring immediate attention vs routine findings
+URGENCY_TIERS = {
+    # CRITICAL: Life-threatening conditions requiring immediate intervention
+    'Pneumothorax': 'critical',      # Collapsed lung - emergency
+    'Mass': 'critical',              # Potential malignancy - urgent oncology
+    'Edema': 'critical',             # Pulmonary edema - cardiac emergency
+    
+    # MODERATE: Significant findings requiring prompt attention
+    'Pneumonia': 'moderate',         # Infection - needs treatment
+    'Consolidation': 'moderate',     # Active lung disease
+    'Infiltration': 'moderate',      # Abnormal substance in lungs
+    'Effusion': 'moderate',          # Fluid accumulation
+    
+    # ROUTINE: Chronic or less urgent findings
+    'Nodule': 'routine',             # Often benign, needs monitoring
+    'Fibrosis': 'routine',           # Chronic scarring
+    'Atelectasis': 'routine',        # Partial collapse, often positional
+    'Cardiomegaly': 'routine',       # Enlarged heart, chronic condition
+    'Emphysema': 'routine',          # Chronic lung disease
+    'Pleural_Thickening': 'routine', # Often old scarring
+}
+
+# Urgency priority for sorting (lower = more urgent)
+URGENCY_PRIORITY = {
+    'critical': 0,
+    'moderate': 1,
+    'routine': 2,
+}
+
 class ModelService:
     def __init__(self, model_path: str = "models/best_model.onnx"):
         """
@@ -90,16 +120,16 @@ class ModelService:
         
         return image_np_batch.astype(np.float32)
     
-    def predict(self, image_bytes: bytes, threshold: float = 0.5) -> List[Dict[str, any]]:
+    def predict(self, image_bytes: bytes, threshold: float = 0.5) -> Tuple[List[Dict[str, any]], str]:
         """
-        Run ONNX inference and return predictions with severity classification
+        Run ONNX inference and return predictions with clinical urgency classification
         
         Args:
             image_bytes: Raw image bytes
             threshold: Minimum confidence score to include in results
             
         Returns:
-            List of predictions with label, score, and severity
+            Tuple of (predictions list, overall_urgency_tier)
         """
         # Preprocess image
         input_array = self.preprocess_image(image_bytes)
@@ -114,22 +144,33 @@ class ModelService:
         logits = outputs[0][0]  # Shape: (13,)
         probabilities = self._sigmoid(logits)
         
-        # Build predictions
+        # Build predictions with clinical urgency
         predictions = []
+        highest_urgency = 'routine'  # Default if no findings
+        
         for idx, (label, score) in enumerate(zip(LABELS, probabilities)):
             if score >= threshold:
                 severity = self._classify_severity(score)
+                urgency_tier = URGENCY_TIERS.get(label, 'routine')
+                
                 predictions.append({
                     "label": label,
                     "score": float(score),
                     "severity": severity,
+                    "urgency_tier": urgency_tier,
                     "confidence_pct": float(round(score * 100, 2))
                 })
+                
+                # Track highest urgency for case-level triage
+                if URGENCY_PRIORITY.get(urgency_tier, 2) < URGENCY_PRIORITY.get(highest_urgency, 2):
+                    highest_urgency = urgency_tier
         
-        # Sort by score (descending)
-        predictions.sort(key=lambda x: x['score'], reverse=True)
+        # Sort by urgency first, then by score (descending)
+        predictions.sort(
+            key=lambda x: (URGENCY_PRIORITY.get(x['urgency_tier'], 2), -x['score'])
+        )
         
-        return predictions
+        return predictions, highest_urgency
     
     @staticmethod
     def _sigmoid(x: np.ndarray) -> np.ndarray:
