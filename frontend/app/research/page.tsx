@@ -83,6 +83,93 @@ export default function ResearchPage() {
             </Card>
           </motion.div>
 
+          {/* System Architecture Diagram */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+          >
+            <Card className="glass-card p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                  <Layers className="w-5 h-5 text-purple-400" />
+                </div>
+                <h2 className="text-2xl font-bold text-white">System Architecture</h2>
+              </div>
+              
+              {/* Architecture Flow Diagram */}
+              <div className="relative">
+                {/* Flow Steps */}
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                  {/* Step 1: Input */}
+                  <div className="glass-panel p-4 rounded-xl text-center relative">
+                    <div className="w-12 h-12 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center mx-auto mb-3">
+                      <span className="text-blue-400 font-bold">1</span>
+                    </div>
+                    <h4 className="font-semibold text-white text-sm mb-1">Input</h4>
+                    <p className="text-xs text-gray-400">Chest X-Ray Image (JPG/PNG)</p>
+                    <div className="hidden md:block absolute top-1/2 -right-2 transform -translate-y-1/2 text-gray-500">→</div>
+                  </div>
+
+                  {/* Step 2: Preprocessing */}
+                  <div className="glass-panel p-4 rounded-xl text-center relative">
+                    <div className="w-12 h-12 rounded-full bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center mx-auto mb-3">
+                      <span className="text-cyan-400 font-bold">2</span>
+                    </div>
+                    <h4 className="font-semibold text-white text-sm mb-1">Preprocessing</h4>
+                    <p className="text-xs text-gray-400">Resize, Normalize, Augment</p>
+                    <div className="hidden md:block absolute top-1/2 -right-2 transform -translate-y-1/2 text-gray-500">→</div>
+                  </div>
+
+                  {/* Step 3: DenseNet121 */}
+                  <div className="glass-panel p-4 rounded-xl text-center relative border border-blue-500/30 bg-blue-500/5">
+                    <div className="w-12 h-12 rounded-full bg-blue-500/30 border border-blue-500/50 flex items-center justify-center mx-auto mb-3">
+                      <Brain className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <h4 className="font-semibold text-white text-sm mb-1">DenseNet121</h4>
+                    <p className="text-xs text-gray-400">ONNX Runtime Inference</p>
+                    <div className="hidden md:block absolute top-1/2 -right-2 transform -translate-y-1/2 text-gray-500">→</div>
+                  </div>
+
+                  {/* Step 4: Predictions */}
+                  <div className="glass-panel p-4 rounded-xl text-center relative">
+                    <div className="w-12 h-12 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center mx-auto mb-3">
+                      <span className="text-green-400 font-bold">4</span>
+                    </div>
+                    <h4 className="font-semibold text-white text-sm mb-1">Predictions</h4>
+                    <p className="text-xs text-gray-400">13 Pathology Scores</p>
+                    <div className="hidden md:block absolute top-1/2 -right-2 transform -translate-y-1/2 text-gray-500">→</div>
+                  </div>
+
+                  {/* Step 5: XAI */}
+                  <div className="glass-panel p-4 rounded-xl text-center relative border border-orange-500/30 bg-orange-500/5">
+                    <div className="w-12 h-12 rounded-full bg-orange-500/30 border border-orange-500/50 flex items-center justify-center mx-auto mb-3">
+                      <Target className="w-5 h-5 text-orange-400" />
+                    </div>
+                    <h4 className="font-semibold text-white text-sm mb-1">Grad-CAM</h4>
+                    <p className="text-xs text-gray-400">Explainable Heatmap</p>
+                  </div>
+                </div>
+
+                {/* Tech Labels */}
+                <div className="mt-6 flex flex-wrap justify-center gap-3">
+                  <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-400">
+                    FastAPI Backend
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-400">
+                    Next.js Frontend
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-400">
+                    PyTorch + ONNX
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-gray-400">
+                    Real-time Processing
+                  </span>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+
           {/* Methodology */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}

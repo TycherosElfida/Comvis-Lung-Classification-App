@@ -173,17 +173,33 @@ export default function WorklistPage() {
         </div>
         
         {pendingCases.length === 0 ? (
-          <div className="p-12 text-center">
-            <FileImage className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400 mb-2">No pending cases</p>
-            <p className="text-sm text-gray-500 mb-4">Upload a new scan to get started</p>
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-16 text-center"
+          >
+            {/* Animated Empty State Illustration */}
+            <div className="relative w-24 h-24 mx-auto mb-6">
+              <div className="absolute inset-0 bg-blue-500/10 rounded-2xl animate-pulse" />
+              <div className="absolute inset-2 bg-blue-500/5 rounded-xl flex items-center justify-center">
+                <FileImage className="w-10 h-10 text-blue-400/50" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center animate-bounce">
+                <Plus className="w-2.5 h-2.5 text-white" />
+              </div>
+            </div>
+            
+            <h3 className="text-xl font-semibold text-white mb-2">No Pending Cases</h3>
+            <p className="text-gray-400 mb-6 max-w-sm mx-auto">
+              Your worklist is empty. Upload a new chest X-ray to begin AI-powered analysis.
+            </p>
             <Link href="/dashboard/upload">
-              <Button variant="outline">
+              <Button className="bg-blue-600 hover:bg-blue-700 rounded-full px-6">
                 <Plus className="w-4 h-4 mr-2" />
-                Upload Scan
+                Upload New Scan
               </Button>
             </Link>
-          </div>
+          </motion.div>
         ) : (
           <div className="divide-y divide-white/5">
             <AnimatePresence>

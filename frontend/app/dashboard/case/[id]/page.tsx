@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect, use } from 'react'
+import { useState, useEffect, use, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
+import { toast } from 'sonner'
 import { 
   ArrowLeft, 
   User, 
@@ -15,7 +16,9 @@ import {
   Loader2,
   AlertTriangle,
   AlertCircle,
-  Sparkles
+  Sparkles,
+  SplitSquareHorizontal,
+  Keyboard
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -128,7 +131,29 @@ export default function CaseViewerPage({ params }: CaseViewerPageProps) {
   const [selectedFinding, setSelectedFinding] = useState<string | null>(null)
   const [isGeneratingHeatmap, setIsGeneratingHeatmap] = useState(false)
   const [showHeatmap, setShowHeatmap] = useState(false)
+  const [compareMode, setCompareMode] = useState(false)
+  const [sliderPosition, setSliderPosition] = useState(50)
   const [notes, setNotes] = useState('')
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      
+      if (e.key === 'v' || e.key === 'V') {
+        handleVerify()
+      } else if (e.key === 'r' || e.key === 'R') {
+        handleReject()
+      } else if (e.key === 'c' || e.key === 'C') {
+        if (caseData?.heatmapUrl) {
+          setCompareMode(!compareMode)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [caseData, compareMode])
 
   useEffect(() => {
     const foundCase = getCaseById(resolvedParams.id)
@@ -169,9 +194,15 @@ export default function CaseViewerPage({ params }: CaseViewerPageProps) {
         setHeatmap(caseData.id, data.gradcam.heatmap_base64)
         setCaseData(prev => prev ? { ...prev, heatmapUrl: data.gradcam.heatmap_base64 } : null)
         setShowHeatmap(true)
+        toast.success('Heatmap generated', {
+          description: `Visualizing attention for ${selectedFinding}`,
+        })
       }
     } catch (err) {
       console.error('Heatmap generation failed:', err)
+      toast.error('Heatmap generation failed', {
+        description: 'Please try again',
+      })
     } finally {
       setIsGeneratingHeatmap(false)
     }
@@ -180,6 +211,9 @@ export default function CaseViewerPage({ params }: CaseViewerPageProps) {
   const handleVerify = () => {
     if (caseData) {
       updateCaseStatus(caseData.id, 'verified')
+      toast.success('Case verified', {
+        description: `${caseData.patientName} • AI diagnosis confirmed`,
+      })
       router.push('/dashboard')
     }
   }
@@ -187,6 +221,9 @@ export default function CaseViewerPage({ params }: CaseViewerPageProps) {
   const handleReject = () => {
     if (caseData) {
       updateCaseStatus(caseData.id, 'rejected')
+      toast('Case rejected', {
+        description: `${caseData.patientName} • Sent for manual review`,
+      })
       router.push('/dashboard')
     }
   }
@@ -254,60 +291,145 @@ export default function CaseViewerPage({ params }: CaseViewerPageProps) {
         <Card className="glass-card p-4 flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold text-white">
-              {showHeatmap && caseData.heatmapUrl ? 'XAI Heatmap View' : 'Original X-Ray'}
+              {compareMode ? 'Compare View' : showHeatmap && caseData.heatmapUrl ? 'XAI Heatmap View' : 'Original X-Ray'}
             </h2>
             <div className="flex gap-2">
               {caseData.heatmapUrl && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowHeatmap(!showHeatmap)}
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  {showHeatmap ? 'Show Original' : 'Show Heatmap'}
-                </Button>
+                <>
+                  <Button
+                    variant={compareMode ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setCompareMode(!compareMode)
+                      if (!compareMode) setShowHeatmap(false)
+                    }}
+                    className={compareMode ? "bg-blue-600 hover:bg-blue-700" : ""}
+                  >
+                    <SplitSquareHorizontal className="w-4 h-4 mr-2" />
+                    Compare
+                  </Button>
+                  {!compareMode && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowHeatmap(!showHeatmap)}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      {showHeatmap ? 'Original' : 'Heatmap'}
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           </div>
           
           <div className="flex-1 relative bg-slate-900 rounded-xl overflow-hidden">
-            <AnimatePresence mode="wait">
-              {showHeatmap && caseData.heatmapUrl ? (
-                <motion.div
-                  key="heatmap"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0"
+            {/* Compare Mode with Slider */}
+            {compareMode && caseData.heatmapUrl && caseData.imageUrl ? (
+              <div className="absolute inset-0">
+                {/* Original Image (full) */}
+                <Image
+                  src={caseData.imageUrl}
+                  alt="Original X-Ray"
+                  fill
+                  className="object-contain"
+                />
+                
+                {/* Heatmap Image (clipped) */}
+                <div 
+                  className="absolute inset-0 overflow-hidden"
+                  style={{ width: `${sliderPosition}%` }}
                 >
                   <Image
                     src={caseData.heatmapUrl}
                     alt="Grad-CAM Heatmap"
                     fill
                     className="object-contain"
+                    style={{ 
+                      width: `${100 / (sliderPosition / 100)}%`,
+                      maxWidth: 'none'
+                    }}
                   />
-                </motion.div>
-              ) : caseData.imageUrl ? (
-                <motion.div
-                  key="original"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute inset-0"
-                >
-                  <Image
-                    src={caseData.imageUrl}
-                    alt="Original X-Ray"
-                    fill
-                    className="object-contain"
-                  />
-                </motion.div>
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <p className="text-gray-500">No image available</p>
                 </div>
-              )}
-            </AnimatePresence>
+                
+                {/* Slider Handle */}
+                <div 
+                  className="absolute top-0 bottom-0 w-1 bg-white shadow-lg cursor-ew-resize z-10"
+                  style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
+                  onMouseDown={(e) => {
+                    const container = e.currentTarget.parentElement
+                    if (!container) return
+                    
+                    const handleMouseMove = (moveEvent: MouseEvent) => {
+                      const rect = container.getBoundingClientRect()
+                      const pos = ((moveEvent.clientX - rect.left) / rect.width) * 100
+                      setSliderPosition(Math.max(0, Math.min(100, pos)))
+                    }
+                    
+                    const handleMouseUp = () => {
+                      document.removeEventListener('mousemove', handleMouseMove)
+                      document.removeEventListener('mouseup', handleMouseUp)
+                    }
+                    
+                    document.addEventListener('mousemove', handleMouseMove)
+                    document.addEventListener('mouseup', handleMouseUp)
+                  }}
+                >
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white shadow-lg flex items-center justify-center">
+                    <div className="flex gap-0.5">
+                      <div className="w-0.5 h-4 bg-gray-400 rounded" />
+                      <div className="w-0.5 h-4 bg-gray-400 rounded" />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Labels */}
+                <div className="absolute bottom-4 left-4 px-2 py-1 rounded bg-black/60 text-xs text-white">
+                  Heatmap
+                </div>
+                <div className="absolute bottom-4 right-4 px-2 py-1 rounded bg-black/60 text-xs text-white">
+                  Original
+                </div>
+              </div>
+            ) : (
+              <AnimatePresence mode="wait">
+                {showHeatmap && caseData.heatmapUrl ? (
+                  <motion.div
+                    key="heatmap"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0"
+                  >
+                    <Image
+                      src={caseData.heatmapUrl}
+                      alt="Grad-CAM Heatmap"
+                      fill
+                      className="object-contain"
+                    />
+                  </motion.div>
+                ) : caseData.imageUrl ? (
+                  <motion.div
+                    key="original"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0"
+                  >
+                    <Image
+                      src={caseData.imageUrl}
+                      alt="Original X-Ray"
+                      fill
+                      className="object-contain"
+                    />
+                  </motion.div>
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <p className="text-gray-500">No image available</p>
+                  </div>
+                )}
+              </AnimatePresence>
+            )}
 
             {/* Heatmap Generation Loading Overlay */}
             {isGeneratingHeatmap && (
@@ -316,6 +438,24 @@ export default function CaseViewerPage({ params }: CaseViewerPageProps) {
                 <p className="text-blue-400 font-medium">Generating XAI Heatmap...</p>
                 <p className="text-sm text-gray-400">Analyzing: {selectedFinding}</p>
               </div>
+            )}
+          </div>
+
+          {/* Keyboard Shortcuts Hint */}
+          <div className="mt-3 flex items-center justify-center gap-4 text-xs text-gray-500">
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 font-mono">V</kbd>
+              Verify
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 font-mono">R</kbd>
+              Reject
+            </span>
+            {caseData.heatmapUrl && (
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 rounded bg-white/10 border border-white/20 font-mono">C</kbd>
+                Compare
+              </span>
             )}
           </div>
         </Card>

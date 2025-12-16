@@ -4,13 +4,15 @@ import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDropzone } from 'react-dropzone'
 import { motion } from 'framer-motion'
+import { toast } from 'sonner'
 import { 
   Upload, 
   Loader2, 
   User, 
   FileImage,
   AlertCircle,
-  ArrowLeft
+  ArrowLeft,
+  CheckCircle2
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -96,10 +98,23 @@ export default function UploadPage() {
         inferenceTimeMs: data.inference_time_ms || 0
       })
 
+      // Show success toast with urgency info
+      const urgencyLabel = data.urgency_tier === 'critical' ? '🚨 Critical' : 
+                          data.urgency_tier === 'moderate' ? '⚠️ Moderate' : '✅ Routine'
+      
+      toast.success('Scan analyzed successfully', {
+        description: `${patientName} • ${urgencyLabel} priority • ${data.predictions?.length || 0} findings`,
+        duration: 4000,
+      })
+
       // Navigate to worklist
       router.push('/dashboard')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to process scan')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to process scan'
+      setError(errorMessage)
+      toast.error('Analysis failed', {
+        description: errorMessage,
+      })
     } finally {
       setIsProcessing(false)
     }

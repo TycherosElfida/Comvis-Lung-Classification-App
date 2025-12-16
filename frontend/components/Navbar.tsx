@@ -2,10 +2,22 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Activity } from 'lucide-react'
+import { Activity, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ThemeToggle } from '@/components/ThemeToggle'
+import { usePathname } from 'next/navigation'
+import { cn } from '@/lib/utils'
+
+const navLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/dashboard', label: 'Dashboard' },
+  { href: '/research', label: 'Research' },
+  { href: '/about', label: 'About' },
+]
 
 export function Navbar() {
+  const pathname = usePathname()
+
   return (
     <motion.nav
       initial={{ y: -100 }}
@@ -27,35 +39,49 @@ export function Navbar() {
           </Link>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center gap-8">
-            <Link 
-              href="/" 
-              className="text-gray-300 hover:text-white transition-colors font-medium"
-            >
-              Home
-            </Link>
-            <Link 
-              href="/dashboard" 
-              className="text-gray-300 hover:text-white transition-colors font-medium"
-            >
-              Dashboard
-            </Link>
-            <Link 
-              href="/about" 
-              className="text-gray-300 hover:text-white transition-colors font-medium"
-            >
-              About
-            </Link>
+          <div className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href || 
+                (link.href !== '/' && pathname.startsWith(link.href))
+              
+              return (
+                <Link 
+                  key={link.href}
+                  href={link.href} 
+                  className={cn(
+                    "px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
+                    isActive 
+                      ? "bg-blue-500/20 text-blue-400 border border-blue-500/30" 
+                      : "text-gray-300 hover:text-white hover:bg-white/5"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              )
+            })}
           </div>
 
           {/* CTA Button */}
-          <Link href="/dashboard">
-            <Button 
-              className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 shadow-lg hover:shadow-blue-500/50 transition-all"
-            >
-              Dashboard
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <ThemeToggle className="text-gray-300 hover:text-white" />
+            <Link href="/research" className="hidden sm:block">
+              <Button 
+                variant="ghost"
+                size="sm"
+                className="text-gray-300 hover:text-white"
+              >
+                <BookOpen className="w-4 h-4 mr-2" />
+                Paper
+              </Button>
+            </Link>
+            <Link href="/dashboard">
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 shadow-lg hover:shadow-blue-500/50 transition-all"
+              >
+                Launch App
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </motion.nav>
