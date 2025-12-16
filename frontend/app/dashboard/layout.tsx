@@ -43,11 +43,15 @@ const navItems = [
   },
 ]
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const pathname = usePathname()
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-
-  const SidebarContent = () => (
+// Sidebar content extracted as a separate component
+function SidebarContent({ 
+  pathname, 
+  onNavigate 
+}: { 
+  pathname: string
+  onNavigate: () => void 
+}) {
+  return (
     <>
       {/* Logo Section */}
       <div className="p-6 border-b border-white/10">
@@ -72,7 +76,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <Link
               key={item.href}
               href={item.href}
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={onNavigate}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
                 isActive 
@@ -97,7 +101,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="p-4 border-t border-white/10 space-y-3">
         <Link 
           href="/" 
-          onClick={() => setIsMobileMenuOpen(false)}
+          onClick={onNavigate}
           className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
         >
           <Home className="w-4 h-4" />
@@ -125,6 +129,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
     </>
   )
+}
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const pathname = usePathname()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  const closeMobileMenu = () => setIsMobileMenuOpen(false)
 
   return (
     <div className="min-h-screen flex">
@@ -155,7 +166,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={closeMobileMenu}
               className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
             />
             
@@ -167,7 +178,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="lg:hidden fixed top-0 left-0 bottom-0 w-72 glass-panel border-r border-white/10 flex flex-col z-50"
             >
-              <SidebarContent />
+              <SidebarContent pathname={pathname} onNavigate={closeMobileMenu} />
             </motion.aside>
           </>
         )}
@@ -175,7 +186,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex w-72 glass-panel border-r border-white/10 flex-col">
-        <SidebarContent />
+        <SidebarContent pathname={pathname} onNavigate={() => {}} />
       </aside>
 
       {/* Main Content */}

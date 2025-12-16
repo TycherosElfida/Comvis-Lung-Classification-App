@@ -78,7 +78,7 @@ export default function ResearchPage() {
                 the NIH ChestX-ray14 dataset, achieving high accuracy in multi-label classification. 
                 To enhance clinical trust and interpretability, we integrate <strong className="text-white">Grad-CAM 
                 (Gradient-weighted Class Activation Mapping)</strong> for explainable AI visualization, 
-                allowing radiologists to understand which regions of the image influenced the model's predictions.
+                allowing radiologists to understand which regions of the image influenced the model&apos;s predictions.
               </p>
             </Card>
           </motion.div>
@@ -350,7 +350,7 @@ export default function ResearchPage() {
               <p className="text-gray-300 leading-relaxed mb-4">
                 To enhance clinical trust, our system implements <strong className="text-white">Gradient-weighted 
                 Class Activation Mapping (Grad-CAM)</strong>. This technique generates visual heatmaps 
-                highlighting the regions of the X-ray image that most influenced the model's predictions. 
+                highlighting the regions of the X-ray image that most influenced the model&apos;s predictions. 
                 This allows radiologists to verify that the AI is focusing on clinically relevant areas, 
                 improving transparency and enabling human-AI collaboration in diagnosis.
               </p>

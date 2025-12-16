@@ -11,18 +11,11 @@ export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
-  // Prevent hydration mismatch
+  // Standard pattern for next-themes - must run once on mount
+   
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  if (!mounted) {
-    return (
-      <Button variant="ghost" size="icon" className={cn("w-9 h-9", className)}>
-        <div className="w-4 h-4" />
-      </Button>
-    )
-  }
 
   const cycleTheme = () => {
     if (theme === 'dark') {
@@ -32,6 +25,15 @@ export function ThemeToggle({ className }: { className?: string }) {
     } else {
       setTheme('dark')
     }
+  }
+
+  // Show placeholder during SSR to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="icon" className={cn("w-9 h-9", className)}>
+        <div className="w-4 h-4" />
+      </Button>
+    )
   }
 
   return (
@@ -69,15 +71,20 @@ export function ThemeToggleMini() {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
+   
   useEffect(() => {
     setMounted(true)
   }, [])
 
-  if (!mounted) return null
+  // Show placeholder during SSR
+  if (!mounted) {
+    return <div className="w-24 h-7" />
+  }
 
   return (
     <div className="flex items-center gap-1 p-1 rounded-lg bg-white/5">
       <button
+        type="button"
         onClick={() => setTheme('light')}
         className={cn(
           "p-1.5 rounded-md transition-colors",
@@ -90,6 +97,7 @@ export function ThemeToggleMini() {
         <Sun className="w-3.5 h-3.5" />
       </button>
       <button
+        type="button"
         onClick={() => setTheme('dark')}
         className={cn(
           "p-1.5 rounded-md transition-colors",
@@ -102,6 +110,7 @@ export function ThemeToggleMini() {
         <Moon className="w-3.5 h-3.5" />
       </button>
       <button
+        type="button"
         onClick={() => setTheme('system')}
         className={cn(
           "p-1.5 rounded-md transition-colors",

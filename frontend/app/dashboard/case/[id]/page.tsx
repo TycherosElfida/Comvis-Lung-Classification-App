@@ -17,8 +17,7 @@ import {
   AlertTriangle,
   AlertCircle,
   Sparkles,
-  SplitSquareHorizontal,
-  Keyboard
+  SplitSquareHorizontal
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -133,9 +132,29 @@ export default function CaseViewerPage({ params }: CaseViewerPageProps) {
   const [showHeatmap, setShowHeatmap] = useState(false)
   const [compareMode, setCompareMode] = useState(false)
   const [sliderPosition, setSliderPosition] = useState(50)
-  const [notes, setNotes] = useState('')
 
-  // Keyboard shortcuts
+  // Define handlers first with useCallback
+  const handleVerify = useCallback(() => {
+    if (caseData) {
+      updateCaseStatus(caseData.id, 'verified')
+      toast.success('Case verified', {
+        description: `${caseData.patientName} • AI diagnosis confirmed`,
+      })
+      router.push('/dashboard')
+    }
+  }, [caseData, updateCaseStatus, router])
+
+  const handleReject = useCallback(() => {
+    if (caseData) {
+      updateCaseStatus(caseData.id, 'rejected')
+      toast('Case rejected', {
+        description: `${caseData.patientName} • Sent for manual review`,
+      })
+      router.push('/dashboard')
+    }
+  }, [caseData, updateCaseStatus, router])
+
+  // Keyboard shortcuts - now handlers are defined above
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
@@ -146,20 +165,19 @@ export default function CaseViewerPage({ params }: CaseViewerPageProps) {
         handleReject()
       } else if (e.key === 'c' || e.key === 'C') {
         if (caseData?.heatmapUrl) {
-          setCompareMode(!compareMode)
+          setCompareMode(prev => !prev)
         }
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [caseData, compareMode])
+  }, [caseData, handleVerify, handleReject])
 
   useEffect(() => {
     const foundCase = getCaseById(resolvedParams.id)
     if (foundCase) {
       setCaseData(foundCase)
-      setNotes(foundCase.notes)
       // Auto-select first finding
       if (foundCase.predictions.length > 0 && !selectedFinding) {
         setSelectedFinding(foundCase.predictions[0].label)
@@ -205,26 +223,6 @@ export default function CaseViewerPage({ params }: CaseViewerPageProps) {
       })
     } finally {
       setIsGeneratingHeatmap(false)
-    }
-  }
-
-  const handleVerify = () => {
-    if (caseData) {
-      updateCaseStatus(caseData.id, 'verified')
-      toast.success('Case verified', {
-        description: `${caseData.patientName} • AI diagnosis confirmed`,
-      })
-      router.push('/dashboard')
-    }
-  }
-
-  const handleReject = () => {
-    if (caseData) {
-      updateCaseStatus(caseData.id, 'rejected')
-      toast('Case rejected', {
-        description: `${caseData.patientName} • Sent for manual review`,
-      })
-      router.push('/dashboard')
     }
   }
 
@@ -513,7 +511,7 @@ export default function CaseViewerPage({ params }: CaseViewerPageProps) {
               ) : (
                 <>
                   <Eye className="w-4 h-4 mr-2" />
-                  Generate Heatmap for "{selectedFinding}"
+                  Generate Heatmap for &ldquo;{selectedFinding}&rdquo;
                 </>
               )}
             </Button>
