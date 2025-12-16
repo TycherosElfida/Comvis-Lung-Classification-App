@@ -1,36 +1,121 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Krida LungVision — Frontend
+
+Next.js 16 frontend application for the AI-powered lung pathology classification system.
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript 5.8
+- **Styling**: Tailwind CSS 4
+- **Animations**: Framer Motion
+- **UI Components**: shadcn/ui
+- **Icons**: Lucide React
+- **Notifications**: Sonner
+- **State**: Zustand
+- **Theming**: next-themes
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+
+### Installation
 
 ```bash
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file:
 
-## Learn More
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Available Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Run production build |
+| `npm run lint` | Run ESLint |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+frontend/
+├── app/                    # Next.js App Router
+│   ├── page.tsx           # Landing page
+│   ├── layout.tsx         # Root layout
+│   ├── globals.css        # Global styles
+│   ├── about/             # About page
+│   ├── research/          # Research paper page
+│   └── dashboard/         # Dashboard section
+│       ├── page.tsx       # Worklist
+│       ├── layout.tsx     # Dashboard layout
+│       ├── upload/        # Upload new scan
+│       ├── history/       # Case history
+│       └── case/[id]/     # Case viewer
+├── components/            # React components
+│   ├── ui/               # shadcn/ui components
+│   ├── Navbar.tsx        # Navigation
+│   ├── Hero.tsx          # Landing hero
+│   ├── ThemeProvider.tsx # Theme context
+│   └── ThemeToggle.tsx   # Dark/Light toggle
+├── store/                # State management
+│   └── caseStore.ts      # Case store
+└── lib/                  # Utilities
+    └── utils.ts          # Helper functions
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Features
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Pages
+- **Landing** (`/`) — Hero section with CTA
+- **About** (`/about`) — Project info, tech stack, team
+- **Research** (`/research`) — Academic paper presentation
+- **Dashboard** (`/dashboard`) — Active case worklist
+- **Upload** (`/dashboard/upload`) — Upload new X-ray
+- **History** (`/dashboard/history`) — Completed cases
+- **Case Viewer** (`/dashboard/case/[id]`) — Detailed analysis with Grad-CAM
+
+### UI Features
+- 🌓 Dark/Light/System theme support
+- 📱 Responsive mobile-first design
+- ⌨️ Keyboard shortcuts (V/R/C)
+- 🔔 Toast notifications
+- ✨ Smooth animations
+- 🎨 Glassmorphism design
+
+## API Integration
+
+The frontend connects to the FastAPI backend at `http://localhost:8000`:
+
+| Endpoint | Purpose |
+|----------|---------|
+| `POST /api/predict` | Analyze X-ray image |
+| `POST /api/gradcam` | Generate heatmap |
+| `GET /health` | Health check |
+
+## Build for Production
+
+```bash
+# Build
+npm run build
+
+# Start production server
+npm start
+```
+
+## License
+
+Educational and research purposes only.

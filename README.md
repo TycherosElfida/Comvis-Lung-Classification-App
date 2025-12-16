@@ -1,229 +1,242 @@
-# 🫁 Multi-Pathology Lung Classification App
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js" alt="Next.js">
+  <img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi" alt="FastAPI">
+  <img src="https://img.shields.io/badge/PyTorch-2.0+-EE4C2C?style=for-the-badge&logo=pytorch" alt="PyTorch">
+  <img src="https://img.shields.io/badge/DenseNet121-CNN-blueviolet?style=for-the-badge" alt="DenseNet121">
+</p>
 
-A professional computer vision application designed to detect **13 different lung pathologies** from Chest X-Ray images. Built with **Streamlit** for the frontend and powered by **PyTorch (DenseNet121)**. Includes MLOps features via **Supabase** for model management, prediction logging, and hot-swapping production model versions.
+# 🫁 Krida LungVision
 
----
+**AI-Powered Multi-Pathology Lung Classification System**
 
-## 📑 Table of Contents
+A production-ready medical imaging application that detects **13 different lung pathologies** from Chest X-Ray images using deep learning. Features an enterprise-grade hospital workflow with real-time AI triage, Explainable AI (Grad-CAM) visualization, and a modern glassmorphism UI.
 
-- [Key Features](#-key-features)
-- [Architecture](#-architecture)
-- [Tech Stack](#-tech-stack)
-- [Installation & Setup](#-installation--setup)
-- [Database Configuration (Supabase)](#-database-configuration-supabase)
-- [Usage](#-usage)
-- [Project Structure](#-project-structure)
-- [Contributing](#-contributing)
-- [Disclaimer](#-disclaimer)
+> 🎓 **Computer Vision Final Project** — Kelompok 1
 
 ---
 
 ## ✨ Key Features
 
-### 👩‍⚕️ User-Facing Features
-- **Multi-Label Classification**: Predicts up to **13** concurrent pathologies (e.g., Atelectasis, Cardiomegaly, Pneumonia, etc.).
-- **Instant Analysis**: Upload PNG/JPG chest X-rays for real-time inference using a lightweight DenseNet121-based model.
-- **Explainable AI (XAI)**: Integrated Grad-CAM visualizations to highlight regions that influenced the model's predictions.
-- **Modern UI**: Custom dark-mode theme with responsive layout and interactive tabs.
+### 🏥 Clinical Workflow
+- **AI-Powered Triage** — Automatic urgency classification (Critical/Moderate/Routine)
+- **Worklist Management** — Dashboard for pending, verified, and rejected cases
+- **Radiologist Verification Loop** — Human-in-the-loop confirmation system
+- **Case History** — Complete audit trail of all analyzed scans
 
-### 👮 Admin & MLOps Features
-- **Secured Access**: Password-protected admin pages for internal management.
-- **Model Manager**:
-  - Registry of trained models and metadata.
-  - **Hot-swap** production models without restarting the service.
-  - Track metrics (e.g., AUROC) and version history.
-- **Audit Logging**:
-  - Full prediction history with timestamps, model version, and JSON outputs.
-  - Automatic upload of analyzed images to Supabase Storage for auditing and potential retraining.
+### 🧠 AI & Machine Learning
+- **Multi-Label Classification** — Detects 13 concurrent pathologies simultaneously
+- **DenseNet121 Architecture** — Fine-tuned on NIH ChestX-ray14 dataset (112,120 images)
+- **ONNX Runtime Inference** — Production-optimized for <50ms prediction time
+- **Real AUC Score: 0.6794** — Validated performance metrics
 
----
+### 🔍 Explainable AI (XAI)
+- **Grad-CAM Heatmaps** — Visualize model attention on X-ray regions
+- **Interactive Comparison** — Side-by-side slider for original vs. heatmap
+- **Per-Pathology Analysis** — Generate heatmaps for specific findings
 
-## 🏗️ Architecture
-
-The app follows a modular separation of concerns:
-
-- **Frontend**: Streamlit renders the UI and interacts with the API/DB.
-- **Inference Engine**: PyTorch loads model weights dynamically from Supabase Storage based on the "active" model record in the database.
-- **Backend / DB (Supabase)**:
-  - **Metadata**: model versions, metrics, audit logs.
-  - **Storage**: `.pth` model weights and analyzed X-ray images.
+### 💻 Modern UI/UX
+- **Glassmorphism Design** — Premium dark mode interface
+- **Dark/Light Mode Toggle** — System preference support
+- **Responsive Design** — Mobile-first with collapsible sidebar
+- **Keyboard Shortcuts** — V (Verify), R (Reject), C (Compare)
+- **Toast Notifications** — Rich feedback for all actions
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Language**: Python 3.9+
-- **Frontend**: Streamlit
-- **Deep Learning**: PyTorch, Torchvision, Timm
-- **Image Processing**: OpenCV (headless), Pillow
-- **Explainability**: grad-cam library
-- **Database & Storage**: Supabase (PostgreSQL + Storage)
-- **Data Manipulation**: Pandas, NumPy
+| Layer | Technologies |
+|-------|-------------|
+| **Frontend** | Next.js 16, React 19, TypeScript, Tailwind CSS 4, Framer Motion |
+| **Backend** | FastAPI, Python 3.11+, Uvicorn |
+| **AI/ML** | PyTorch, ONNX Runtime, DenseNet121, Grad-CAM |
+| **State** | Zustand (client-side persistence) |
+| **UI Components** | shadcn/ui, Lucide Icons, Sonner (toasts) |
+
+---
+
+## 📁 Project Structure
+
+```
+Comvis-Lung-Classification-App/
+├── backend/                    # FastAPI Backend
+│   ├── app/
+│   │   ├── main.py            # API entry point
+│   │   ├── config.py          # Configuration & constants
+│   │   ├── inference.py       # DenseNet121 inference engine
+│   │   └── gradcam.py         # Grad-CAM implementation
+│   ├── requirements.txt       # Python dependencies
+│   └── .env                   # Environment variables
+│
+├── frontend/                   # Next.js Frontend
+│   ├── app/
+│   │   ├── page.tsx           # Landing page (Hero)
+│   │   ├── layout.tsx         # Root layout with ThemeProvider
+│   │   ├── about/             # About page with team info
+│   │   ├── research/          # Research paper page
+│   │   └── dashboard/         # Protected dashboard
+│   │       ├── page.tsx       # Worklist
+│   │       ├── upload/        # Upload new scan
+│   │       ├── history/       # Case history
+│   │       ├── case/[id]/     # Case viewer with XAI
+│   │       └── layout.tsx     # Dashboard sidebar
+│   ├── components/            # Reusable components
+│   │   ├── ui/                # shadcn/ui components
+│   │   ├── Navbar.tsx         # Navigation bar
+│   │   ├── Hero.tsx           # Landing page hero
+│   │   ├── ThemeProvider.tsx  # Dark/light mode
+│   │   └── ThemeToggle.tsx    # Theme switcher
+│   ├── store/                 # Zustand state management
+│   │   └── caseStore.ts       # Case management store
+│   └── lib/                   # Utilities
+│
+├── models/                     # ML Model Files
+│   └── densenet121_chest_xray.onnx
+│
+├── notebooks/                  # Training notebooks
+│   └── Final_Project.ipynb
+│
+└── README.md                   # This file
+```
 
 ---
 
 ## ⚙️ Installation & Setup
 
-> These instructions assume you clone the repository locally.
+### Prerequisites
+- **Node.js** 18+ and npm
+- **Python** 3.11+
+- **Git**
 
-1. **Clone the repository**
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/Comvis-Lung-Classification-App.git
+git clone https://github.com/TycherosElfida/Comvis-Lung-Classification-App.git
 cd Comvis-Lung-Classification-App
 ```
 
-2. **Create a virtual environment**
+### 2. Backend Setup
 
 ```bash
+# Create virtual environment
 python -m venv .venv
-# Windows
+
+# Activate (Windows)
 .venv\Scripts\activate
-# macOS / Linux
+# Activate (macOS/Linux)
 source .venv/bin/activate
+
+# Install dependencies
+cd backend
+pip install -r requirements.txt
+
+# Start the server
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-3. **Install dependencies**
+The API will be available at `http://localhost:8000`
+
+### 3. Frontend Setup
 
 ```bash
-pip install -r requirements.txt
+# In a new terminal
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
 ```
 
-4. **Configure secrets**
-
-Create a file at `.streamlit/secrets.toml` and add your Supabase project values and an admin password:
-
-```toml
-[supabase]
-url = "YOUR_SUPABASE_PROJECT_URL"
-key = "YOUR_SUPABASE_ANON_KEY"
-
-[admin]
-# Password to access the Audit Log and Model Manager pages
-password = "your_secure_admin_password"
-```
-
-> Keep this file out of version control (it should already be in `.gitignore`).
-
----
-
-## 🗄️ Database Configuration (Supabase)
-
-### 1) Storage Buckets
-Create two buckets in Supabase Storage (public or private depending on your needs):
-
-- `models` — store PyTorch `.pth` model files.
-- `xray-images` — store user-uploaded X-ray images used for auditing and retraining.
-
-### 2) Database Tables
-
-Below is a suggested minimal schema. Adjust types or fields as required by your implementation.
-
-```sql
--- Models registry
-CREATE TABLE IF NOT EXISTS models (
-  id BIGSERIAL PRIMARY KEY,
-  created_at timestamptz DEFAULT now(),
-  version_name text NOT NULL,
-  storage_path text NOT NULL,
-  is_active boolean DEFAULT false,
-  accuracy_auroc double precision,
-  class_names jsonb
-);
-
--- Predictions audit log
-CREATE TABLE IF NOT EXISTS predictions (
-  id BIGSERIAL PRIMARY KEY,
-  created_at timestamptz DEFAULT now(),
-  model_id bigint REFERENCES models(id),
-  image_url text,
-  results_json jsonb
-);
-```
-
-**Notes:**
-- Ensure only one `models` row has `is_active = true` at a time (enforce via admin UI or DB trigger if desired).
-- `class_names` as `jsonb` stores the list of labels in order used by the model.
+The app will be available at `http://localhost:3000`
 
 ---
 
 ## 🚀 Usage
 
-1. **Run the app**
+### Quick Start
+1. Open `http://localhost:3000` in your browser
+2. Click **Launch App** or navigate to `/dashboard`
+3. Click **New Scan** to upload a chest X-ray image
+4. Enter patient information and click **Analyze with AI**
+5. View predictions and urgency classification
+6. Click on a case to view details and generate Grad-CAM heatmaps
+7. **Verify** or **Reject** the AI diagnosis
 
-```bash
-streamlit run app.py
-```
+### Keyboard Shortcuts (Case Viewer)
+| Key | Action |
+|-----|--------|
+| `V` | Verify AI diagnosis |
+| `R` | Reject case for manual review |
+| `C` | Toggle comparison mode |
 
-2. **Open the app**
+### API Endpoints
 
-Visit `http://localhost:8501` in your browser.
-
-3. **Upload an image**
-
-Use the main inference page to upload a Chest X-ray (PNG/JPG). The app will show predictions and a Grad-CAM heatmap.
-
-4. **Admin pages**
-
-- Navigate to **Model Manager** to view models and hot-swap active versions.
-- Navigate to **Audit Log** to inspect prediction history. An admin password (from `.streamlit/secrets.toml`) is required.
-
----
-
-## 📂 Project Structure
-
-```
-Comvis-Lung-Classification-App/
-├── .streamlit/
-│   └── secrets.toml          # API keys and passwords (ignored by git)
-├── assets/
-│   └── style.css             # Custom styling (Dark mode, fonts)
-├── pages/
-│   ├── Audit_Log.py          # Page: View historical predictions
-│   └── Model_Manager.py      # Page: Activate/Deactivate models
-├── utils/
-│   ├── auth.py               # Admin password verification
-│   ├── image_processor.py    # Image preprocessing & normalization
-│   ├── logging.py            # Uploads images & logs to Supabase
-│   ├── model_loader.py       # Downloads & loads active model from DB
-│   ├── supabase_client.py    # Singleton DB connection
-│   ├── ui.py                 # UI utilities (CSS loading)
-│   └── xai.py                # Grad-CAM implementation
-├── app.py                    # Main entry point (Inference page)
-├── requirements.txt          # Python dependencies
-└── README.md                 # Project documentation
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Health check |
+| `POST` | `/api/predict` | Analyze chest X-ray |
+| `POST` | `/api/gradcam` | Generate Grad-CAM heatmap |
 
 ---
 
-## 🤝 Contributing
+## 🎯 Pathologies Detected
 
-Contributions are welcome — please follow the standard GitHub workflow:
+The model classifies the following 13 lung conditions:
 
-1. Fork the repository.
-2. Create a branch: `git checkout -b feature/YourFeature`.
-3. Commit: `git commit -m "Add feature"`.
-4. Push: `git push origin feature/YourFeature`.
-5. Open a Pull Request describing your changes.
-
-If you plan to add new columns to the DB or change model formats, include migration steps and update the `models` table `class_names` structure.
-
----
-
-## ✳️ Recommended Enhancements (optional)
-
-- Add DB triggers to ensure a single `is_active = true` model.
-- Add automated tests for model loader and prediction logging.
-- Implement RBAC for admin pages (Supabase Auth integration).
-- Add CI/CD to push new models to Supabase Storage and auto-register them in the `models` table.
+| ID | Pathology | ID | Pathology |
+|----|-----------|----|-----------| 
+| 1 | Atelectasis | 8 | Nodule |
+| 2 | Cardiomegaly | 9 | Pleural Thickening |
+| 3 | Consolidation | 10 | Pneumonia |
+| 4 | Edema | 11 | Pneumothorax |
+| 5 | Effusion | 12 | Emphysema |
+| 6 | Hernia | 13 | Fibrosis |
+| 7 | Infiltration | | |
 
 ---
 
-## 📝 Disclaimer
+## 📊 Model Performance
 
-This application is intended for **educational and research purposes only** and **should not** be used as the sole substitute for professional medical diagnosis.
+| Metric | Value |
+|--------|-------|
+| **Architecture** | DenseNet121 (ImageNet pretrained) |
+| **Dataset** | NIH ChestX-ray14 (112,120 images) |
+| **Mean AUC** | 0.6794 |
+| **Input Size** | 224 × 224 pixels |
+| **Inference Time** | <50ms (ONNX Runtime) |
 
 ---
 
-_If you need, I can also generate an example `requirements.txt`, sample model-loading snippet, or a small SQL migration script to create the Supabase schema._
+## 👥 Development Team
 
+**Kelompok 1** — Computer Vision Final Project
+
+| Name | Student ID |
+|------|-----------|
+| Steven | 412022006 |
+| Steven Felizio | 412023011 |
+| Sanders Keane Dylan | 412023020 |
+| Bintang Talenta Putra | 412023022 |
+
+---
+
+## 📄 License
+
+This project is for **educational and research purposes only**. 
+
+> ⚠️ **Disclaimer**: This application is NOT intended for clinical use and should NOT be used as a substitute for professional medical diagnosis. Always consult qualified healthcare professionals for medical decisions.
+
+---
+
+## 🔗 Links
+
+- **Repository**: [GitHub](https://github.com/TycherosElfida/Comvis-Lung-Classification-App.git)
+- **Research Paper**: Available at `/research` page
+
+---
+
+<p align="center">
+  Made with ❤️ for Computer Vision Course
+</p>

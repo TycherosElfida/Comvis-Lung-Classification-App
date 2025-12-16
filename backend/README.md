@@ -1,62 +1,112 @@
-# Krida LungVision - Backend
+# Krida LungVision — Backend
 
-Docker-based FastAPI backend for Chest X-Ray pathology classification using ONNX Runtime.
+FastAPI backend for Chest X-Ray pathology classification using ONNX Runtime with Grad-CAM explainability.
 
-## ✅ Completed Features
+## ✨ Features
 
-### Model Conversion
-- ✅ **PyTorch → ONNX**: `best_model_finetuned.pth` → `best_model.onnx` (786KB + 28MB weights)
-- ✅ **Validation**: Output shape verified (batch, 13 classes)
-- ✅ **Test Inference**: Passed with dummy input
+### AI Inference
+- **ONNX Runtime** — CPU/GPU agnostic, production-optimized inference
+- **Multi-Label Classification** — Detects 13 concurrent lung pathologies
+- **Grad-CAM XAI** — Explainable AI heatmap generation
+- **Clinical Triage** — Automatic urgency classification (Critical/Moderate/Routine)
 
-### AI Service (`app/model_service.py`)
-- ✅ **Exact Preprocessing**: Replica of `Training3.ipynb` validation pipeline
-  - Resize to 224x224
-  - ImageNet normalization (mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-  - ToTensor conversion
-- ✅ **ONNX Runtime Integration**: CPU/GPU agnostic inference
-- ✅ **Multi-Label Classification**: Sigmoid activation for 13 pathologies
-- ✅ **Severity Scoring**: High (≥75%), Medium (≥50%), Low (<50%)
+### API
+- **RESTful Design** — Clean, documented endpoints
+- **CORS Enabled** — Ready for frontend integration
+- **Health Checks** — Docker-ready health monitoring
+- **Auto-Documentation** — Swagger UI at `/docs`
 
-### API Endpoints (`app/api.py`)
-- ✅ **POST `/api/predict`**: Image upload → predictions with confidence scores
-- ✅ **GET `/api/health`**: Docker health check
-- ✅ **GET `/api/model/info`**: Model metadata
+## Tech Stack
 
-### Main Application (`app/main.py`)
-- ✅ **CORS Configuration**: Allows frontend connections
-- ✅ **Startup Event**: Model preloading
-- ✅ **Auto-documentation**: `/docs` (Swagger UI)
+| Component | Technology |
+|-----------|------------|
+| **Framework** | FastAPI 0.115 |
+| **Server** | Uvicorn |
+| **ML Runtime** | ONNX Runtime |
+| **Image Processing** | Albumentations, Pillow, OpenCV |
+| **Deep Learning** | PyTorch (for Grad-CAM) |
 
-## Running the Backend
+## Project Structure
 
-### Option 1: Direct Python (Development)
+```
+backend/
+├── app/
+│   ├── main.py           # FastAPI application entry
+│   ├── config.py         # Configuration & constants
+│   ├── inference.py      # ONNX inference engine
+│   └── gradcam.py        # Grad-CAM implementation
+├── models/
+│   ├── best_model.onnx   # ONNX model for inference
+│   └── best_model_finetuned.pth  # PyTorch model for Grad-CAM
+├── tests/
+│   └── test_api.py       # API tests
+├── convert_model.py      # PyTorch → ONNX converter
+├── requirements.txt      # Python dependencies
+└── README.md             # This file
+```
+
+## Getting Started
+
+### Prerequisites
+- Python 3.11+
+- pip
+
+### Installation
+
 ```bash
-cd backend
+# Create virtual environment
+python -m venv .venv
+
+# Activate (Windows)
+.venv\Scripts\activate
+# Activate (macOS/Linux)
+source .venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
+```
+
+### Running the Server
+
+```bash
+# Development (with auto-reload)
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# Production
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-### Option 2: Docker (Production)
+Server runs at `http://localhost:8000`
+
+### Docker (Production)
+
 ```bash
 docker build -t krida-lungvision-backend .
 docker run -p 8000:8000 -v $(pwd)/models:/app/models krida-lungvision-backend
 ```
 
-## API Usage
+## API Endpoints
 
-### Test Health Endpoint
+### Health Check
 ```bash
-curl http://localhost:8000/api/health
+curl http://localhost:8000/health
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "model": "DenseNet121"
+}
 ```
 
 ### Predict Chest X-Ray
 ```bash
 curl -X POST "http://localhost:8000/api/predict?threshold=0.3" \
-  -F "file=@sample_xray.png"
+  -F "file=@chest_xray.png"
 ```
 
-**Expected Response:**
+**Response:**
 ```json
 {
   "success": true,
@@ -74,6 +124,11 @@ curl -X POST "http://localhost:8000/api/predict?threshold=0.3" \
       "severity": "low"
     }
   ],
+  "triage": {
+    "urgency": "critical",
+    "critical_count": 1,
+    "top_finding": "Pneumonia"
+  },
   "model_info": {
     "name": "DenseNet121",
     "num_classes": 13,
@@ -82,31 +137,83 @@ curl -X POST "http://localhost:8000/api/predict?threshold=0.3" \
 }
 ```
 
+### Generate Grad-CAM Heatmap
+```bash
+curl -X POST "http://localhost:8000/api/gradcam" \
+  -F "file=@chest_xray.png" \
+  -F "target_class=Pneumonia"
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "gradcam": {
+    "target_class": "Pneumonia",
+    "heatmap_base64": "data:image/png;base64,..."
+  }
+}
+```
+
 ## 13 Pathology Labels
-1. Atelectasis
-2. Cardiomegaly
-3. Consolidation
-4. Edema
-5. Effusion
-6. Emphysema
-7. Fibrosis
-8. Infiltration
-9. Mass
-10. Nodule
-11. Pleural_Thickening
-12. Pneumonia
-13. Pneumothorax
+
+| ID | Pathology | ID | Pathology |
+|----|-----------|----|-----------| 
+| 1 | Atelectasis | 8 | Nodule |
+| 2 | Cardiomegaly | 9 | Pleural Thickening |
+| 3 | Consolidation | 10 | Pneumonia |
+| 4 | Edema | 11 | Pneumothorax |
+| 5 | Effusion | 12 | Emphysema |
+| 6 | Hernia | 13 | Fibrosis |
+| 7 | Infiltration | | |
 
 ## Model Architecture
-- **Base**: DenseNet121 (pretrained on ImageNet)
-- **Output Layer**: Linear(1024 → 13) for multi-label classification
-- **Activation**: Sigmoid (per-class probabilities)
-- **Input Shape**: (batch, 3, 224, 224)
-- **Output Shape**: (batch, 13)
+
+| Property | Value |
+|----------|-------|
+| **Base Model** | DenseNet121 (ImageNet pretrained) |
+| **Output Layer** | Linear(1024 → 13) |
+| **Activation** | Sigmoid (multi-label) |
+| **Input Size** | 224 × 224 × 3 |
+| **Output Size** | 13 (probabilities) |
+
+### Preprocessing Pipeline
+1. Resize to 224×224
+2. Convert to RGB (if needed)
+3. Normalize with ImageNet stats:
+   - Mean: [0.485, 0.456, 0.406]
+   - Std: [0.229, 0.224, 0.225]
+
+## Triage Logic
+
+Cases are classified by urgency based on detected pathologies:
+
+| Urgency | Condition |
+|---------|-----------|
+| **Critical** | Pneumothorax >50% OR any critical finding >75% |
+| **Moderate** | Any finding between 50-75% |
+| **Routine** | All findings <50% |
+
+**Critical Pathologies**: Pneumothorax, Pneumonia, Consolidation, Edema
+
+## Running Tests
+
+```bash
+pytest tests/ -v
+```
 
 ## Dependencies
+
 See `requirements.txt`:
-- `onnxruntime` - Model inference
-- `albumentations` - Preprocessing
-- `fastapi` - API framework
-- `uvicorn` - ASGI server
+- `fastapi` — Web framework
+- `uvicorn` — ASGI server
+- `onnxruntime` — ONNX inference
+- `albumentations` — Image preprocessing
+- `torch` — For Grad-CAM
+- `opencv-python-headless` — Image operations
+- `pillow` — Image handling
+- `python-multipart` — File uploads
+
+## License
+
+Educational and research purposes only.
