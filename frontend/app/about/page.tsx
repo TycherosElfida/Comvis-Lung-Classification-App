@@ -1,119 +1,125 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
-import Link from 'next/link'
-import { Navbar } from '@/components/Navbar'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { 
-  Activity, 
-  Zap, 
-  Shield, 
-  Award, 
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { Navbar } from "@/components/Navbar";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Activity,
+  Zap,
+  Shield,
+  Award,
   Brain,
   Layers,
   Github,
   ExternalLink,
   GraduationCap,
-  Code2
-} from 'lucide-react'
+  Code2,
+} from "lucide-react";
 
 // Team members data
 const teamMembers = [
   {
-    name: 'Steven',
-    studentId: '412022006',
+    name: "Steven",
+    studentId: "412022006",
   },
   {
-    name: 'Steven Felizio',
-    studentId: '412023011',
+    name: "Steven Felizio",
+    studentId: "412023011",
   },
   {
-    name: 'Sanders Keane Dylan',
-    studentId: '412023020',
+    name: "Sanders Keane Dylan",
+    studentId: "412023020",
   },
   {
-    name: 'Bintang Talenta Putra',
-    studentId: '412023022',
+    name: "Bintang Talenta Putra",
+    studentId: "412023022",
   },
-]
+];
 
 // Tech stack data
 const techStack = {
   ai: [
-    { name: 'DenseNet121', desc: 'CNN Architecture' },
-    { name: 'PyTorch', desc: 'Deep Learning' },
-    { name: 'ONNX Runtime', desc: 'Fast Inference' },
-    { name: 'Grad-CAM', desc: 'Explainable AI' },
+    { name: "DenseNet121", desc: "CNN Architecture" },
+    { name: "PyTorch", desc: "Deep Learning" },
+    { name: "ONNX Runtime", desc: "Fast Inference" },
+    { name: "Grad-CAM", desc: "Explainable AI" },
   ],
   backend: [
-    { name: 'FastAPI', desc: 'REST API' },
-    { name: 'Python 3.11+', desc: 'Backend Logic' },
-    { name: 'Albumentations', desc: 'Preprocessing' },
-    { name: 'Docker', desc: 'Containerization' },
+    { name: "FastAPI", desc: "REST API" },
+    { name: "Python 3.13.10", desc: "Backend Logic" },
+    { name: "Albumentations", desc: "Preprocessing" },
+    { name: "Docker", desc: "Containerization" },
   ],
   frontend: [
-    { name: 'Next.js 16', desc: 'React Framework' },
-    { name: 'TypeScript', desc: 'Type Safety' },
-    { name: 'Tailwind CSS', desc: 'Styling' },
-    { name: 'Framer Motion', desc: 'Animations' },
-  ]
-}
+    { name: "Next.js 16", desc: "React Framework" },
+    { name: "TypeScript", desc: "Type Safety" },
+    { name: "Tailwind CSS", desc: "Styling" },
+    { name: "Framer Motion", desc: "Animations" },
+  ],
+};
 
 // Features data
 const features = [
   {
     icon: Activity,
-    title: 'Real-Time Analysis',
-    description: 'ONNX Runtime delivers predictions in under 50ms for instant clinical decision support.',
-    color: 'blue'
+    title: "Real-Time Analysis",
+    description:
+      "ONNX Runtime delivers predictions in under 50ms for instant clinical decision support.",
+    color: "blue",
   },
   {
     icon: Zap,
-    title: 'Multi-Label Detection',
-    description: 'Simultaneously detects 13 lung pathologies including Pneumonia, Edema, and Pneumothorax.',
-    color: 'cyan'
+    title: "Multi-Label Detection",
+    description:
+      "Simultaneously detects 13 lung pathologies including Pneumonia, Edema, and Pneumothorax.",
+    color: "cyan",
   },
   {
     icon: Brain,
-    title: 'Explainable AI',
-    description: 'Grad-CAM heatmaps visualize model attention for transparent, trustworthy predictions.',
-    color: 'purple'
+    title: "Explainable AI",
+    description:
+      "Grad-CAM heatmaps visualize model attention for transparent, trustworthy predictions.",
+    color: "purple",
   },
   {
     icon: Shield,
-    title: 'Clinical Triage',
-    description: 'Automatic urgency classification prioritizes critical cases for faster treatment.',
-    color: 'green'
+    title: "Clinical Triage",
+    description:
+      "Automatic urgency classification prioritizes critical cases for faster treatment.",
+    color: "green",
   },
   {
     icon: Layers,
-    title: 'Hospital Workflow',
-    description: 'Full worklist management with verification loop for radiologist sign-off.',
-    color: 'orange'
+    title: "Hospital Workflow",
+    description:
+      "Full worklist management with verification loop for radiologist sign-off.",
+    color: "orange",
   },
   {
     icon: Award,
-    title: 'Research-Backed',
-    description: 'Trained on NIH ChestX-ray14 dataset with 112,120 labeled images.',
-    color: 'yellow'
+    title: "Research-Backed",
+    description:
+      "Trained on NIH ChestX-ray14 dataset with 112,120 labeled images.",
+    color: "yellow",
   },
-]
+];
 
 const colorClasses: Record<string, string> = {
-  blue: 'bg-blue-500/20 border-blue-500/30 text-blue-400',
-  cyan: 'bg-cyan-500/20 border-cyan-500/30 text-cyan-400',
-  purple: 'bg-purple-500/20 border-purple-500/30 text-purple-400',
-  green: 'bg-green-500/20 border-green-500/30 text-green-400',
-  orange: 'bg-orange-500/20 border-orange-500/30 text-orange-400',
-  yellow: 'bg-yellow-500/20 border-yellow-500/30 text-yellow-400',
-}
+  blue: "bg-blue-500/20 border-blue-500/30 text-blue-400",
+  cyan: "bg-cyan-500/20 border-cyan-500/30 text-cyan-400",
+  purple: "bg-purple-500/20 border-purple-500/30 text-purple-400",
+  green: "bg-green-500/20 border-green-500/30 text-green-400",
+  orange: "bg-orange-500/20 border-orange-500/30 text-orange-400",
+  yellow: "bg-yellow-500/20 border-yellow-500/30 text-yellow-400",
+};
 
 export default function AboutPage() {
   return (
     <main className="min-h-screen">
       <Navbar />
-      
+
       {/* Hero Section */}
       <section className="pt-32 pb-16 relative overflow-hidden">
         {/* Background Effects */}
@@ -136,9 +142,9 @@ export default function AboutPage() {
               About <span className="text-gradient">Krida LungVision</span>
             </h1>
             <p className="text-gray-400 text-lg max-w-3xl mx-auto leading-relaxed">
-              AI-powered chest X-ray analysis system for automated lung pathology detection,
-              built as a Computer Vision course final project demonstrating deep learning
-              and explainable AI techniques.
+              AI-powered chest X-ray analysis system for automated lung
+              pathology detection, built as a Computer Vision course final
+              project demonstrating deep learning and explainable AI techniques.
             </p>
           </motion.div>
         </div>
@@ -155,16 +161,20 @@ export default function AboutPage() {
             <Card className="glass-card p-8 md:p-12">
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 <div>
-                  <h2 className="text-3xl font-bold mb-6 text-white">Project Vision</h2>
+                  <h2 className="text-3xl font-bold mb-6 text-white">
+                    Project Vision
+                  </h2>
                   <p className="text-gray-300 leading-relaxed mb-4">
-                    <strong className="text-white">Krida LungVision</strong> transforms chest X-ray analysis 
-                    from a time-consuming manual process into an AI-assisted workflow that prioritizes 
+                    <strong className="text-white">Krida LungVision</strong>{" "}
+                    transforms chest X-ray analysis from a time-consuming manual
+                    process into an AI-assisted workflow that prioritizes
                     critical cases and provides explainable insights.
                   </p>
                   <p className="text-gray-300 leading-relaxed mb-6">
-                    By leveraging DenseNet121 architecture trained on the NIH ChestX-ray14 dataset,
-                    combined with Grad-CAM visualization, we demonstrate how modern deep learning
-                    can augment clinical decision-making while maintaining transparency.
+                    By leveraging DenseNet121 architecture trained on the NIH
+                    ChestX-ray14 dataset, combined with Grad-CAM visualization,
+                    we demonstrate how modern deep learning can augment clinical
+                    decision-making while maintaining transparency.
                   </p>
                   <div className="flex gap-4">
                     <Link href="/dashboard">
@@ -182,7 +192,7 @@ export default function AboutPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="glass-panel p-6 rounded-xl text-center">
-                    <p className="text-3xl font-bold text-blue-400">0.6794</p>
+                    <p className="text-3xl font-bold text-blue-400">70.36%</p>
                     <p className="text-sm text-gray-400">AUC Score</p>
                   </div>
                   <div className="glass-panel p-6 rounded-xl text-center">
@@ -190,7 +200,9 @@ export default function AboutPage() {
                     <p className="text-sm text-gray-400">Pathologies</p>
                   </div>
                   <div className="glass-panel p-6 rounded-xl text-center">
-                    <p className="text-3xl font-bold text-green-400">&lt;50ms</p>
+                    <p className="text-3xl font-bold text-green-400">
+                      &lt;50ms
+                    </p>
                     <p className="text-sm text-gray-400">Inference</p>
                   </div>
                   <div className="glass-panel p-6 rounded-xl text-center">
@@ -215,7 +227,8 @@ export default function AboutPage() {
           >
             <h2 className="text-3xl font-bold text-white mb-4">Key Features</h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              A comprehensive system combining state-of-the-art AI with clinical workflow integration
+              A comprehensive system combining state-of-the-art AI with clinical
+              workflow integration
             </p>
           </motion.div>
 
@@ -229,10 +242,16 @@ export default function AboutPage() {
                 transition={{ delay: index * 0.1 }}
               >
                 <Card className="glass-panel p-6 h-full hover:bg-white/5 transition-colors group">
-                  <div className={`w-12 h-12 rounded-lg border flex items-center justify-center mb-4 ${colorClasses[feature.color]} group-hover:scale-110 transition-transform`}>
+                  <div
+                    className={`w-12 h-12 rounded-lg border flex items-center justify-center mb-4 ${
+                      colorClasses[feature.color]
+                    } group-hover:scale-110 transition-transform`}
+                  >
                     <feature.icon className="w-6 h-6" />
                   </div>
-                  <h3 className="font-semibold text-white text-lg mb-2">{feature.title}</h3>
+                  <h3 className="font-semibold text-white text-lg mb-2">
+                    {feature.title}
+                  </h3>
                   <p className="text-sm text-gray-400">{feature.description}</p>
                 </Card>
               </motion.div>
@@ -250,7 +269,9 @@ export default function AboutPage() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl font-bold text-white mb-4">Technology Stack</h2>
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Technology Stack
+            </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
               Built with modern, production-ready technologies
             </p>
@@ -273,8 +294,13 @@ export default function AboutPage() {
                 </div>
                 <div className="space-y-3">
                   {techStack.ai.map((tech) => (
-                    <div key={tech.name} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                      <span className="font-medium text-white">{tech.name}</span>
+                    <div
+                      key={tech.name}
+                      className="flex items-center justify-between p-3 rounded-lg bg-white/5"
+                    >
+                      <span className="font-medium text-white">
+                        {tech.name}
+                      </span>
                       <span className="text-xs text-gray-400">{tech.desc}</span>
                     </div>
                   ))}
@@ -298,8 +324,13 @@ export default function AboutPage() {
                 </div>
                 <div className="space-y-3">
                   {techStack.backend.map((tech) => (
-                    <div key={tech.name} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                      <span className="font-medium text-white">{tech.name}</span>
+                    <div
+                      key={tech.name}
+                      className="flex items-center justify-between p-3 rounded-lg bg-white/5"
+                    >
+                      <span className="font-medium text-white">
+                        {tech.name}
+                      </span>
                       <span className="text-xs text-gray-400">{tech.desc}</span>
                     </div>
                   ))}
@@ -323,8 +354,13 @@ export default function AboutPage() {
                 </div>
                 <div className="space-y-3">
                   {techStack.frontend.map((tech) => (
-                    <div key={tech.name} className="flex items-center justify-between p-3 rounded-lg bg-white/5">
-                      <span className="font-medium text-white">{tech.name}</span>
+                    <div
+                      key={tech.name}
+                      className="flex items-center justify-between p-3 rounded-lg bg-white/5"
+                    >
+                      <span className="font-medium text-white">
+                        {tech.name}
+                      </span>
                       <span className="text-xs text-gray-400">{tech.desc}</span>
                     </div>
                   ))}
@@ -344,7 +380,9 @@ export default function AboutPage() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl font-bold text-white dark:text-white mb-4">Development Team</h2>
+            <h2 className="text-3xl font-bold text-white dark:text-white mb-4">
+              Development Team
+            </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Kelompok 1
             </p>
@@ -365,8 +403,12 @@ export default function AboutPage() {
                       {member.name.charAt(0)}
                     </span>
                   </div>
-                  <h3 className="font-semibold text-slate-900 dark:text-white text-sm mb-1">{member.name}</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">{member.studentId}</p>
+                  <h3 className="font-semibold text-slate-900 dark:text-white text-sm mb-1">
+                    {member.name}
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                    {member.studentId}
+                  </p>
                 </Card>
               </motion.div>
             ))}
@@ -404,22 +446,32 @@ export default function AboutPage() {
             <Card className="glass-card p-8 md:p-12 text-center relative overflow-hidden">
               {/* Glow Effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-transparent to-cyan-500/10" />
-              
+
               <div className="relative z-10">
-                <h2 className="text-3xl font-bold text-white mb-4">Ready to Explore?</h2>
+                <h2 className="text-3xl font-bold text-white mb-4">
+                  Ready to Explore?
+                </h2>
                 <p className="text-gray-400 mb-8 max-w-xl mx-auto">
-                  Experience the full hospital-grade diagnostic workflow with AI-powered triage,
-                  explainable predictions, and radiologist verification.
+                  Experience the full hospital-grade diagnostic workflow with
+                  AI-powered triage, explainable predictions, and radiologist
+                  verification.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link href="/dashboard">
-                    <Button size="lg" className="bg-blue-600 hover:bg-blue-700 rounded-full px-8">
+                    <Button
+                      size="lg"
+                      className="bg-blue-600 hover:bg-blue-700 rounded-full px-8"
+                    >
                       Launch Dashboard
                       <ExternalLink className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>
                   <Link href="/research">
-                    <Button size="lg" variant="outline" className="rounded-full px-8">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="rounded-full px-8"
+                    >
                       Read Research Paper
                     </Button>
                   </Link>
@@ -457,5 +509,5 @@ export default function AboutPage() {
         </div>
       </footer>
     </main>
-  )
+  );
 }
